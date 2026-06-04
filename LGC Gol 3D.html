@@ -1,0 +1,2990 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Phòng Golf 3D Private</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row">
+
+    <!-- SIDEBAR (Mobile-responsive navigation) -->
+    <aside id="sidebar" class="bg-emerald-950 text-white w-full md:w-64 shrink-0 transition-all duration-300 z-30 flex flex-col justify-between border-r border-emerald-900">
+        <div>
+            <!-- Sidebar Header -->
+            <div class="p-5 flex items-center justify-between border-b border-emerald-900/50">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-500 text-emerald-950 p-2 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-golf-ball-tee text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-base tracking-tight leading-none text-emerald-100">PRIVATE GOLF</h1>
+                        <span class="text-[10px] text-emerald-400 font-medium uppercase tracking-wider" id="side-subtitle">Hệ thống phòng đơn</span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-emerald-300 hover:text-white">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5" id="main-nav">
+                <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-chart-pie text-lg w-5"></i>
+                    <span data-i18n="nav_dashboard">Bảng điều khiển</span>
+                </button>
+                <button onclick="switchTab('rooms')" data-tab="rooms" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-door-open text-lg w-5"></i>
+                    <span data-i18n="nav_room">Phòng chơi Live</span>
+                    <span id="active-rooms-badge" class="ml-auto bg-emerald-500 text-emerald-950 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <button onclick="switchTab('bookings')" data-tab="bookings" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-calendar-check text-lg w-5"></i>
+                    <span data-i18n="nav_bookings">Lịch đặt phòng trước</span>
+                </button>
+                <button onclick="switchTab('services')" data-tab="services" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-utensils text-lg w-5"></i>
+                    <span data-i18n="nav_services">Dịch vụ & Giờ chơi</span>
+                </button>
+                <button onclick="switchTab('transactions')" data-tab="transactions" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-wallet text-lg w-5"></i>
+                    <span data-i18n="nav_transactions">Thu chi & Sổ quỹ</span>
+                </button>
+                <button onclick="switchTab('customers')" data-tab="customers" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-users text-lg w-5"></i>
+                    <span data-i18n="nav_customers">Khách hàng hội viên</span>
+                </button>
+                <button onclick="switchTab('reports')" data-tab="reports" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-emerald-200 hover:bg-emerald-900/40 hover:text-white">
+                    <i class="fa-solid fa-chart-line text-lg w-5"></i>
+                    <span data-i18n="nav_reports">Hiệu suất hoạt động</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer Info -->
+        <div class="p-4 border-t border-emerald-900/50 bg-emerald-950/50 flex flex-col gap-3">
+            <!-- Data Management actions to prevent loss -->
+            <div class="bg-emerald-900/40 p-2.5 rounded-lg border border-emerald-800/60 text-xs space-y-1.5">
+                <p class="font-bold text-emerald-300 text-[11px]" data-i18n="storage_system">HỆ THỐNG LƯU TRỮ</p>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button onclick="exportData()" class="bg-emerald-800 hover:bg-emerald-700 text-white p-1 rounded font-semibold text-[10px] transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-download"></i> <span data-i18n="btn_backup">Sao lưu</span>
+                    </button>
+                    <label class="bg-emerald-800 hover:bg-emerald-700 text-white p-1 rounded font-semibold text-[10px] transition flex items-center justify-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-upload"></i> <span data-i18n="btn_restore">Khôi phục</span>
+                        <input type="file" id="restore-file" class="hidden" onchange="importData(this)">
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-emerald-800 flex items-center justify-center font-bold text-emerald-200 border border-emerald-700">
+                    AD
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold text-emerald-100 truncate" data-i18n="role_admin">Quản trị viên</p>
+                    <p class="text-[10px] text-emerald-400 truncate" id="venue-name">Phòng Golf Private VIP</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto h-screen">
+        
+        <!-- HEADERBAR -->
+        <header class="bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-20">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebarMobile()" class="md:hidden text-slate-600 hover:text-emerald-700">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h2 id="current-tab-title" class="text-lg font-bold text-slate-800">Bảng điều khiển</h2>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Language Selector -->
+                <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button onclick="setLanguage('vi')" id="lang-btn-vi" class="px-2 py-1 text-xs font-extrabold rounded-md flex items-center gap-1.5 transition">
+                        <span>🇻🇳</span> <span class="hidden sm:inline">VI</span>
+                    </button>
+                    <button onclick="setLanguage('la')" id="lang-btn-la" class="px-2 py-1 text-xs font-extrabold rounded-md flex items-center gap-1.5 transition">
+                        <span>🇱🇦</span> <span class="hidden sm:inline">LA</span>
+                    </button>
+                </div>
+
+                <!-- Clock -->
+                <div class="hidden sm:flex items-center gap-2 text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-semibold">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="header-clock">--:--:--</span>
+                </div>
+                <!-- Quick action button -->
+                <button onclick="openBookingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-sm">
+                    <i class="fa-solid fa-plus"></i>
+                    <span data-i18n="btn_quick_book">Đặt phòng nhanh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- APP SCREENS/TABS -->
+        <div class="flex-1 p-6 space-y-6">
+
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content space-y-6">
+                <!-- Highlight Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Revenue Card -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="dash_revenue_today">Doanh thu hôm nay</p>
+                            <h3 id="dash-revenue" class="text-xl font-extrabold text-slate-800">0 ₫</h3>
+                            <p class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-up mr-1"></i><span data-i18n="dash_all_services">Từ tất cả các dịch vụ</span></p>
+                        </div>
+                        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl">
+                            <i class="fa-solid fa-hand-holding-dollar text-xl"></i>
+                        </div>
+                    </div>
+                    <!-- Playtime Card -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="dash_playtime_today">Thời gian chơi hôm nay</p>
+                            <h3 id="dash-playtime" class="text-xl font-extrabold text-slate-800">0h</h3>
+                            <p class="text-[10px] text-blue-600 font-semibold"><i class="fa-regular fa-clock mr-1"></i><span data-i18n="dash_actual_time">Tính theo thời gian thực</span></p>
+                        </div>
+                        <div class="bg-blue-50 text-blue-600 p-3 rounded-xl">
+                            <i class="fa-solid fa-stopwatch text-xl"></i>
+                        </div>
+                    </div>
+                    <!-- Bookings Card -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="dash_bookings_today">Lịch hẹn hôm nay</p>
+                            <h3 id="dash-bookings" class="text-xl font-extrabold text-slate-800">0</h3>
+                            <p class="text-[10px] text-amber-600 font-semibold"><i class="fa-regular fa-calendar-check mr-1"></i><span data-i18n="dash_pending_check">Chờ check-in</span></p>
+                        </div>
+                        <div class="bg-amber-50 text-amber-600 p-3 rounded-xl">
+                            <i class="fa-solid fa-calendar-days text-xl"></i>
+                        </div>
+                    </div>
+                    <!-- Net Income Card -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="dash_net_balance">Số dư thực tế còn tồn</p>
+                            <h3 id="dash-net" class="text-xl font-extrabold text-slate-800">0 ₫</h3>
+                            <p class="text-[10px] text-purple-600 font-semibold"><i class="fa-solid fa-scale-balanced mr-1"></i><span data-i18n="dash_cash_transfer">Cả tiền mặt & ck</span></p>
+                        </div>
+                        <div class="bg-purple-50 text-purple-600 p-3 rounded-xl">
+                            <i class="fa-solid fa-scale-balanced text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Status & Quick Action -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- LEFT: THE ONLY PRIVATE ROOM CONTROL CENTER (Trái tim của hệ thống phòng đơn) -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col justify-between" id="private-room-live-card">
+                        <!-- Loaded dynamically in JS for the Single Private Room -->
+                    </div>
+
+                    <!-- RIGHT: Quick Transaction Form -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="font-bold text-slate-800 text-base" data-i18n="dash_quick_tx_title">Ghi nhận Thu / Chi nhanh</h4>
+                        <form id="dash-quick-tx-form" onsubmit="handleQuickTxSubmit(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_tx_type">Loại giao dịch</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center justify-center gap-1 border border-emerald-500 bg-emerald-50 text-emerald-700 p-2.5 rounded-lg cursor-pointer text-xs font-bold transition select-none">
+                                        <input type="radio" name="tx_type" value="THU" checked class="hidden" onchange="toggleTxLabels(this)">
+                                        <i class="fa-solid fa-circle-arrow-down"></i> <span data-i18n="tx_income">Thu vào</span>
+                                    </label>
+                                    <label class="flex items-center justify-center gap-1 border border-slate-200 bg-slate-50 text-slate-600 p-2.5 rounded-lg cursor-pointer text-xs font-bold transition select-none">
+                                        <input type="radio" name="tx_type" value="CHI" class="hidden" onchange="toggleTxLabels(this)">
+                                        <i class="fa-solid fa-circle-arrow-up"></i> <span data-i18n="tx_expense">Chi ra</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Method division -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_payment_method">Phương thức thanh toán</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center justify-center gap-1 border border-indigo-500 bg-indigo-50 text-indigo-700 p-2 rounded-lg cursor-pointer text-xs font-semibold transition select-none">
+                                        <input type="radio" name="tx_payment_method" value="CHUYEN_KHOAN" checked class="hidden" onchange="togglePaymentMethodLabels(this)">
+                                        <i class="fa-solid fa-credit-card"></i> <span data-i18n="pay_transfer">Chuyển khoản</span>
+                                    </label>
+                                    <label class="flex items-center justify-center gap-1 border border-slate-200 bg-slate-50 text-slate-600 p-2 rounded-lg cursor-pointer text-xs font-semibold transition select-none">
+                                        <input type="radio" name="tx_payment_method" value="TIEN_MAT" class="hidden" onchange="togglePaymentMethodLabels(this)">
+                                        <i class="fa-solid fa-money-bill-1-wave"></i> <span data-i18n="pay_cash">Tiền mặt</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Backdate DateTime Field -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_datetime">Ngày & Giờ phát sinh</label>
+                                <input type="datetime-local" id="tx_time" required class="w-full border border-slate-200 p-2 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_amount">Số tiền (đ)</label>
+                                    <input type="number" id="tx_amount" required min="1000" placeholder="Số tiền" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_category">Danh mục</label>
+                                    <select id="tx_category" class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <option value="Giờ chơi">Giờ chơi</option>
+                                        <option value="Bán nước / Đồ ăn">Bán nước / Đồ ăn</option>
+                                        <option value="Phí phụ thu khác">Phí phụ thu khác</option>
+                                        <option value="Mua sắm thiết bị">Mua sắm thiết bị</option>
+                                        <option value="Sửa chữa bảo trì">Sửa chữa bảo trì</option>
+                                        <option value="Tiền điện / Tiền nước">Tiền điện / Tiền nước</option>
+                                        <option value="Chi phí khác">Chi phí khác</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Upload receipt image -->
+                            <div id="quick-receipt-upload-container">
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_receipt_image">Ảnh biên lai / chuyển khoản ngân hàng</label>
+                                <div class="flex items-center gap-2">
+                                    <label class="flex-1 flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 p-2 rounded-lg cursor-pointer bg-slate-50 transition text-slate-500 hover:text-emerald-600">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <span id="quick-upload-text" class="text-xs truncate" data-i18n="btn_choose_img">Tải ảnh...</span>
+                                        <input type="file" id="tx_receipt" accept="image/*" class="hidden" onchange="handleQuickReceiptSelect(this)">
+                                    </label>
+                                    <button type="button" id="quick-receipt-clear" onclick="clearQuickReceipt()" class="hidden w-9 h-9 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 items-center justify-center hover:bg-rose-100 transition">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                                <div id="quick-receipt-preview" class="mt-2 hidden">
+                                    <img src="" class="h-16 w-auto rounded-lg object-contain border border-slate-200 shadow-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_note">Ghi chú chi tiết</label>
+                                <textarea id="tx_description" rows="2" placeholder="Nhập ghi chú..." class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-lg text-sm transition shadow-sm" data-i18n="btn_save_tx">
+                                Ghi nhận giao dịch
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: ROOM MANAGEMENT (Simplified details tab for Single Private Room) -->
+            <div id="tab-rooms" class="tab-content space-y-6 hidden">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="font-extrabold text-slate-800 text-lg" data-i18n="room_config_title">Thiết lập Phòng Golf Private VIP</h3>
+                            <p class="text-xs text-slate-500" data-i18n="room_config_desc">Cấu hình đơn giá thuê và loại phòng cố định cho cửa hàng</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-600" data-i18n="room_name_label">Tên phòng Private</label>
+                            <input type="text" id="config-room-name" class="w-full border border-slate-200 p-3 rounded-lg text-sm font-semibold">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-600" data-i18n="room_type_label">Kiểu phân hạng phòng</label>
+                            <input type="text" id="config-room-type" class="w-full border border-slate-200 p-3 rounded-lg text-sm font-semibold bg-slate-50" readonly>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-600" data-i18n="room_price_label">Giá thuê mỗi giờ (mặc định) (đ)</label>
+                            <input type="number" id="config-room-price" class="w-full border border-slate-200 p-3 rounded-lg text-sm font-bold text-emerald-700">
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex justify-end">
+                        <button onclick="saveRoomConfig()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-3 rounded-lg flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_config">Lưu cấu hình phòng</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: BOOKINGS -->
+            <div id="tab-bookings" class="tab-content space-y-6 hidden">
+                <!-- Header tools -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg" data-i18n="bookings_title">Danh sách lịch đặt phòng trước</h3>
+                        <p class="text-xs text-slate-500" data-i18n="bookings_desc">Theo dõi, chuẩn bị tiếp đón chu đáo các lượt chơi Private đã đăng ký trước</p>
+                    </div>
+                    <button onclick="openBookingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="btn_add_booking">Thêm Lịch Đặt Mới</span>
+                    </button>
+                </div>
+
+                <!-- Bookings Table/List -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <th class="px-6 py-4" data-i18n="col_cust_name">Tên Khách Hàng</th>
+                                    <th class="px-6 py-4" data-i18n="col_phone">Số Điện Thoại</th>
+                                    <th class="px-6 py-4" data-i18n="col_room">Phòng Yêu Cầu</th>
+                                    <th class="px-6 py-4" data-i18n="col_checkin_time">Thời Gian Nhận Phòng</th>
+                                    <th class="px-6 py-4" data-i18n="col_duration">Thời Lượng Dự Kiến</th>
+                                    <th class="px-6 py-4" data-i18n="col_status">Trạng Thái</th>
+                                    <th class="px-6 py-4 text-right" data-i18n="col_actions">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookings-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="bookings-empty-state" class="p-8 text-center hidden">
+                        <div class="text-slate-300 mb-2"><i class="fa-solid fa-calendar-xmark text-4xl"></i></div>
+                        <p class="text-slate-500 text-sm font-medium" data-i18n="bookings_empty">Hiện tại chưa có lịch đặt sân nào được đăng ký.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: SERVICES & TIMING CATEGORY (Nơi thêm lựa chọn giờ chơi + ăn uống) -->
+            <div id="tab-services" class="tab-content space-y-6 hidden">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Left: Service list and edit -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:w-2/3 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg" data-i18n="menu_title">Danh mục dịch vụ & Bảng giá giờ chơi</h3>
+                                <p class="text-xs text-slate-500" data-i18n="menu_desc">Thêm và định cấu hình linh hoạt cho Giờ chơi, Đồ ăn thức uống hoặc thuê giày/gậy</p>
+                            </div>
+                            <button onclick="openServiceForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-plus"></i> <span data-i18n="btn_add_service">Thêm Tiện Ích</span>
+                            </button>
+                        </div>
+
+                        <!-- Grid Services -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="services-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Info / Category Explanation -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:w-1/3 space-y-4">
+                        <h3 class="font-bold text-slate-800 text-base" data-i18n="guide_title">Hướng dẫn thiết lập giờ chơi</h3>
+                        <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+                            <p data-i18n="guide_p1">1. Để tạo một gói giờ chơi mới, hãy nhấn nút <b>"Thêm Tiện Ích"</b> và lựa chọn phân loại là <b>"Giờ chơi"</b>.</p>
+                            <p data-i18n="guide_p2">2. Điền tên gói giờ chơi (Ví dụ: <i>"Giờ chơi VIP ngày thường"</i>, <i>"Chơi cuối tuần 18 hố"</i>) cùng mức giá tương ứng cho một giờ.</p>
+                            <p data-i18n="guide_p3">3. Khi bắt đầu mở phòng cho khách hàng chơi, bạn sẽ dễ dàng lựa chọn gói giờ chơi này để hệ thống tính giá chính xác nhất.</p>
+                        </div>
+                        
+                        <div class="border-t border-slate-100 pt-4">
+                            <h4 class="font-bold text-slate-800 text-xs mb-2" data-i18n="popular_services">Dịch vụ bán chạy nhất</h4>
+                            <div class="space-y-3" id="service-leaderboard">
+                                <!-- Loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: TRANSACTIONS -->
+            <div id="tab-transactions" class="tab-content space-y-6 hidden">
+                <!-- Overview & Filter -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center gap-4">
+                        <div class="bg-emerald-500 text-white p-3 rounded-lg"><i class="fa-solid fa-circle-arrow-down text-xl"></i></div>
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block" data-i18n="stat_total_income">Tổng thu</span>
+                            <span id="tx-total-income" class="text-base font-bold text-emerald-950">0 ₫</span>
+                        </div>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl flex items-center gap-4">
+                        <div class="bg-rose-500 text-white p-3 rounded-lg"><i class="fa-solid fa-circle-arrow-up text-xl"></i></div>
+                        <div>
+                            <span class="text-xs text-rose-700 font-semibold block" data-i18n="stat_total_expense">Tổng chi</span>
+                            <span id="tx-total-expense" class="text-base font-bold text-rose-950">0 ₫</span>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex items-center gap-4">
+                        <div class="bg-indigo-600 text-white p-3 rounded-lg"><i class="fa-solid fa-credit-card text-xl"></i></div>
+                        <div>
+                            <span class="text-xs text-indigo-700 font-semibold block" data-i18n="stat_bank_balance">Quỹ chuyển khoản</span>
+                            <span id="tx-transfer-balance" class="text-base font-bold text-indigo-950">0 ₫</span>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-4">
+                        <div class="bg-amber-500 text-white p-3 rounded-lg"><i class="fa-solid fa-money-bill-1-wave text-xl"></i></div>
+                        <div>
+                            <span class="text-xs text-amber-700 font-semibold block" data-i18n="stat_cash_balance">Quỹ tiền mặt</span>
+                            <span id="tx-cash-balance" class="text-base font-bold text-amber-950">0 ₫</span>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-4">
+                        <div class="bg-blue-500 text-white p-3 rounded-lg"><i class="fa-solid fa-scale-balanced text-xl"></i></div>
+                        <div>
+                            <span class="text-xs text-blue-700 font-semibold block" data-i18n="stat_total_balance">Tổng tồn quỹ</span>
+                            <span id="tx-balance" class="text-base font-bold text-blue-950">0 ₫</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tx Table -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-i18n="ledger_title">Nhật ký thu chi & hóa đơn thanh toán</h3>
+                            <p class="text-xs text-slate-500" data-i18n="ledger_desc">Kiểm tra chi tiết mốc thời gian, tiền mặt/chuyển khoản và minh chứng ngân hàng của từng hoạt động</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <select id="tx-filter-type" onchange="renderTransactions()" class="border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-white">
+                                <option value="ALL" data-i18n="opt_all_tx">Tất cả giao dịch</option>
+                                <option value="THU" data-i18n="opt_income_only">Chỉ các khoản Thu</option>
+                                <option value="CHI" data-i18n="opt_expense_only">Chỉ các khoản Chi</option>
+                            </select>
+                            <select id="tx-filter-method" onchange="renderTransactions()" class="border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-white">
+                                <option value="ALL" data-i18n="opt_all_methods">Tất cả phương thức</option>
+                                <option value="CHUYEN_KHOAN" data-i18n="pay_transfer">Chuyển khoản</option>
+                                <option value="TIEN_MAT" data-i18n="pay_cash">Tiền mặt</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <th class="px-4 py-4" data-i18n="col_tx_id">Mã GD</th>
+                                    <th class="px-4 py-4" data-i18n="col_time">Thời Gian</th>
+                                    <th class="px-4 py-4" data-i18n="col_type">Loại</th>
+                                    <th class="px-4 py-4" data-i18n="col_method">Phương Thức</th>
+                                    <th class="px-4 py-4" data-i18n="col_category">Danh Mục</th>
+                                    <th class="px-4 py-4" data-i18n="col_note">Nội dung / Ghi chú</th>
+                                    <th class="px-4 py-4 text-center" data-i18n="col_proof">Minh chứng</th>
+                                    <th class="px-4 py-4 text-right" data-i18n="col_amount">Số Tiền (đ)</th>
+                                    <th class="px-4 py-4 text-center" data-i18n="col_actions">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tx-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Loaded dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: CUSTOMERS -->
+            <div id="tab-customers" class="tab-content space-y-6 hidden">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg" data-i18n="cust_title">Hội viên & Khách hàng thân thiết</h3>
+                        <p class="text-xs text-slate-500" data-i18n="cust_desc">Quản lý tích điểm, áp dụng mức chiết khấu thông minh cho khách hàng thân thiết</p>
+                    </div>
+                    <button onclick="openCustomerModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-user-plus"></i> <span data-i18n="btn_add_customer">Thêm Hội Viên Mới</span>
+                    </button>
+                </div>
+
+                <!-- Customer table -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <th class="px-6 py-4" data-i18n="col_cust_name">Tên Hội Viên</th>
+                                    <th class="px-6 py-4" data-i18n="col_phone">Số Điện Thoại</th>
+                                    <th class="px-6 py-4" data-i18n="col_rank">Hạng Hội Viên</th>
+                                    <th class="px-6 py-4 text-center" data-i18n="col_points">Tích Điểm</th>
+                                    <th class="px-6 py-4 text-center" data-i18n="col_discount">Mức Giảm Giá</th>
+                                    <th class="px-6 py-4 text-right" data-i18n="col_total_spent">Tổng Tiêu Dùng</th>
+                                    <th class="px-6 py-4 text-right" data-i18n="col_actions">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: REPORTS (Dữ liệu đã được dọn sạch hoàn toàn ban đầu) -->
+            <div id="tab-reports" class="tab-content space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart container -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 space-y-4">
+                        <h3 class="font-bold text-slate-800 text-base" data-i18n="chart_title">Thống kê hoạt động thực tế 7 ngày gần nhất</h3>
+                        <div class="h-80 w-full">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Side Stats KPI -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <h3 class="font-bold text-slate-800 text-base" data-i18n="occupancy_title">Hiệu năng Phòng Private VIP</h3>
+                        
+                        <div class="space-y-4" id="room-occupancy-list">
+                            <!-- Occupancy calculations here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ================= MODALS & POPUPS ================= -->
+
+    <!-- 1. MODAL: ROOM SESSION DETAILS / ORDER WATER / CHECKOUT -->
+    <div id="room-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-emerald-950 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-500/30">
+                        <i class="fa-solid fa-golf-ball-tee"></i>
+                    </div>
+                    <div>
+                        <h3 id="room-modal-title" class="font-bold text-lg">Phòng Private VIP</h3>
+                        <p id="room-modal-subtitle" class="text-xs text-emerald-300">Quản lý hóa đơn & gọi dịch vụ</p>
+                    </div>
+                </div>
+                <button onclick="closeRoomModal()" class="text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Content Area (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <!-- Status Bar & Basic Actions -->
+                <div id="room-modal-status-bar" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <span id="room-modal-badge" class="px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">TRỐNG</span>
+                        <span id="room-modal-rate" class="text-xs text-slate-500 font-semibold ml-2">-- ₫/giờ</span>
+                    </div>
+                    <div id="room-modal-primary-action" class="flex gap-2 w-full sm:w-auto">
+                        <!-- Filled by JS based on Status -->
+                    </div>
+                </div>
+
+                <!-- Session Timer Info (Only if playing) -->
+                <div id="room-modal-timer-section" class="bg-slate-900 text-white p-5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-emerald-600 rounded-full animate-pulse">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold" data-i18n="live_timer">Thời gian chơi trực tiếp</p>
+                            <h4 id="session-timer" class="text-2xl font-black font-mono tracking-wider">00:00:00</h4>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400 font-semibold" data-i18n="temp_hourly_cost">Tạm tính tiền giờ chơi</p>
+                        <p id="session-playtime-cost" class="text-xl font-bold text-emerald-400">0 ₫</p>
+                    </div>
+                </div>
+
+                <!-- Order Service & Other Costs (Tabs inside modal) -->
+                <div id="room-modal-billing-details" class="space-y-4 hidden">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 class="font-bold text-slate-800 text-sm" data-i18n="invoice_items_title">Sử dụng dịch vụ & Đồ dùng</h4>
+                        <button onclick="toggleServicePicker()" class="text-emerald-600 hover:text-emerald-700 text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-plus-circle"></i> <span data-i18n="btn_add_services_invoice">Gọi nước & Thêm tiện ích</span>
+                        </button>
+                    </div>
+
+                    <!-- Quick Service Add Picker -->
+                    <div id="service-picker" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 hidden">
+                        <h5 class="text-xs font-bold text-slate-600" data-i18n="picker_title">Chọn đồ ăn / đồ uống / giờ chơi:</h5>
+                        <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar" id="picker-services-list">
+                            <!-- Populated with service buttons -->
+                        </div>
+                        <!-- Phí khác quick add -->
+                        <div class="border-t border-slate-200 pt-3 flex gap-2">
+                            <input type="text" id="custom-fee-name" placeholder="Tên phí phát sinh khác..." class="flex-1 text-xs border border-slate-300 p-2 rounded-lg">
+                            <input type="number" id="custom-fee-price" placeholder="Số tiền (đ)" class="w-28 text-xs border border-slate-300 p-2 rounded-lg">
+                            <button onclick="addCustomFeeToRoom()" class="bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg" data-i18n="btn_add_fee">Thêm phí</button>
+                        </div>
+                    </div>
+
+                    <!-- Current Room Items Invoice Table -->
+                    <div class="border border-slate-200 rounded-lg overflow-hidden">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase">
+                                <tr>
+                                    <th class="px-3 py-2.5" data-i18n="col_item_name">Khoản mục</th>
+                                    <th class="px-3 py-2.5 text-center" data-i18n="col_qty">SL</th>
+                                    <th class="px-3 py-2.5 text-right" data-i18n="col_price">Đơn giá</th>
+                                    <th class="px-3 py-2.5 text-right" data-i18n="col_subtotal">Thành tiền</th>
+                                    <th class="px-3 py-2.5 text-center" data-i18n="col_remove">Bỏ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="room-items-tbody" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Populated items -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Discount / Member application -->
+                    <div class="flex items-center gap-3 bg-emerald-50/50 p-3 rounded-lg border border-emerald-100/50">
+                        <i class="fa-solid fa-id-card text-emerald-600"></i>
+                        <span class="text-xs font-semibold text-slate-600" data-i18n="field_membership">Khách hàng hội viên:</span>
+                        <select id="modal-select-customer" onchange="applyCustomerDiscount()" class="text-xs border border-slate-200 p-1.5 rounded bg-white">
+                            <!-- Populated by JS -->
+                        </select>
+                        <span id="member-discount-label" class="text-xs font-bold text-emerald-700 ml-auto bg-emerald-100 px-2 py-0.5 rounded">Giảm: 0%</span>
+                    </div>
+
+                    <!-- Payment Method Select and Receipt upload for Checkout -->
+                    <div class="border-t border-slate-100 pt-4 space-y-3">
+                        <h4 class="font-bold text-slate-800 text-sm" data-i18n="invoice_pay_title">Xác nhận thanh toán</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_payment_method">Phương thức</label>
+                                <select id="modal-payment-method" onchange="toggleModalReceiptField(this.value)" class="w-full text-xs border border-slate-200 p-2.5 rounded-lg bg-white font-semibold">
+                                    <option value="CHUYEN_KHOAN" data-i18n="pay_transfer">Chuyển khoản ngân hàng</option>
+                                    <option value="TIEN_MAT" data-i18n="pay_cash">Tiền mặt</option>
+                                </select>
+                            </div>
+                            <div id="modal-receipt-container">
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_receipt_image">Biên lai chuyển khoản (Ảnh)</label>
+                                <div class="flex items-center gap-2">
+                                    <label class="flex-1 flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 p-2 rounded-lg cursor-pointer bg-slate-50 transition text-slate-500 hover:text-emerald-600 text-xs">
+                                        <i class="fa-solid fa-upload"></i>
+                                        <span id="modal-upload-text" class="truncate font-medium" data-i18n="btn_choose_img">Tải ảnh lên...</span>
+                                        <input type="file" id="modal_receipt_file" accept="image/*" class="hidden" onchange="handleModalReceiptSelect(this)">
+                                    </label>
+                                    <button type="button" id="modal-receipt-clear" onclick="clearModalReceipt()" class="hidden w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 items-center justify-center hover:bg-rose-100 transition">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="modal-receipt-preview" class="mt-2 hidden">
+                            <img src="" class="h-24 w-auto rounded-lg object-contain border border-slate-200 shadow-sm">
+                        </div>
+                    </div>
+
+                    <!-- Total Invoice Summary -->
+                    <div class="space-y-1.5 pt-4 border-t border-slate-100">
+                        <div class="flex justify-between text-xs text-slate-500 font-semibold">
+                            <span data-i18n="play_cost_label">Tiền giờ chơi:</span>
+                            <span id="sum-play-cost">0 ₫</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-500 font-semibold">
+                            <span data-i18n="service_cost_label">Tiền dịch vụ & phát sinh:</span>
+                            <span id="sum-service-cost">0 ₫</span>
+                        </div>
+                        <div id="member-discount-line" class="flex justify-between text-xs text-emerald-600 font-semibold hidden">
+                            <span data-i18n="discount_label">Chiết khấu hội viên:</span>
+                            <span id="sum-discount">-0 ₫</span>
+                        </div>
+                        <div class="flex justify-between text-base font-extrabold text-slate-800 pt-1.5 border-t border-slate-100">
+                            <span data-i18n="total_cost_label">TỔNG THANH TOÁN:</span>
+                            <span id="sum-total" class="text-lg text-emerald-700 font-black">0 ₫</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="p-5 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
+                <button onclick="closeRoomModal()" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition" data-i18n="btn_close">Đóng</button>
+                <button id="modal-checkout-btn" onclick="checkoutRoom()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-5 py-2.5 rounded-lg flex items-center gap-1.5 transition shadow-md shadow-emerald-600/10 hidden">
+                    <i class="fa-solid fa-receipt"></i> <span data-i18n="btn_confirm_checkout">THANH TOÁN & TRẢ PHÒNG</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MODAL: START SESSION FOR ROOM WITH NAME & OPTIONAL DETAILS -->
+    <div id="start-session-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex justify-between items-center">
+                <h3 class="font-bold" data-i18n="start_session_title">Bắt đầu phiên chơi mới</h3>
+                <button onclick="closeStartSessionModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="start-room-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_cust_name">Tên khách hàng</label>
+                    <input type="text" id="start-customer-name" value="Khách vãng lai" placeholder="Tên khách hàng..." class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+
+                <!-- SELECT THE TIMING PACKAGE (Đã thêm lựa chọn giờ chơi vào danh mục) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_timing_package">Gói cước / Đơn giá giờ chơi áp dụng</label>
+                    <select id="start-pricing-package" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold bg-white text-emerald-800">
+                        <!-- Loaded dynamically from Services list -->
+                    </select>
+                </div>
+
+                <!-- SELECT BACKDATE START TIME (Mở phiên chơi lùi giờ nếu nhân viên mở máy muộn) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_start_time">Thời điểm bắt đầu chơi (Có thể lùi giờ)</label>
+                    <input type="datetime-local" id="start-time" required class="w-full border border-slate-200 p-2.5 rounded-lg text-xs font-semibold">
+                </div>
+
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="start-with-assistant" class="rounded text-emerald-600 focus:ring-emerald-500">
+                    <label for="start-with-assistant" class="text-xs font-semibold text-slate-600" data-i18n="field_caddie">Sử dụng caddie hỗ trợ (+50.000 ₫/giờ)</label>
+                </div>
+            </div>
+            <div class="p-5 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="closeStartSessionModal()" class="px-4 py-2 text-xs font-bold text-slate-500" data-i18n="btn_cancel">Hủy</button>
+                <button onclick="confirmStartSession()" class="bg-emerald-600 text-white text-xs font-extrabold px-5 py-2.5 rounded-lg" data-i18n="btn_start_now">BẮT ĐẦU NGAY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MODAL: ADD / EDIT BOOKING -->
+    <div id="booking-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex justify-between items-center">
+                <h3 id="booking-modal-title" class="font-bold">Đăng ký lịch đặt phòng</h3>
+                <button onclick="closeBookingModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleBookingSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-booking-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_cust_name">Tên khách hàng</label>
+                    <input type="text" id="book-customer" required placeholder="Nhập tên khách..." class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_phone">Số điện thoại liên lạc</label>
+                    <input type="text" id="book-phone" required placeholder="Ví dụ: 0912..." class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_datetime">Thời gian đến</label>
+                        <input type="datetime-local" id="book-time" required class="w-full border border-slate-200 p-2.5 rounded-lg text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_duration">Thời lượng (giờ)</label>
+                        <input type="number" id="book-duration" min="1" max="12" value="2" required class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                    </div>
+                </div>
+                <div class="p-5 bg-slate-50 -mx-6 -mb-6 border-t border-slate-200 flex justify-between gap-2">
+                    <div>
+                        <button type="button" id="delete-booking-btn" onclick="deleteBooking()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-4 py-2.5 rounded-lg hidden" data-i18n="btn_cancel_booking">Hủy lịch đặt</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeBookingModal()" class="px-4 py-2 text-xs font-bold text-slate-500" data-i18n="btn_close">Thoát</button>
+                        <button type="submit" class="bg-emerald-600 text-white text-xs font-extrabold px-5 py-2.5 rounded-lg" data-i18n="btn_confirm">CẬP NHẬT LỊCH</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. MODAL: ADD / EDIT MEMBER -->
+    <div id="customer-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex justify-between items-center">
+                <h3 id="customer-modal-title" class="font-bold">Đăng ký khách hàng hội viên mới</h3>
+                <button onclick="closeCustomerModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleCustomerSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-customer-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="col_cust_name">Tên hội viên</label>
+                    <input type="text" id="cust-name" required placeholder="Họ và tên..." class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="col_phone">Số điện thoại</label>
+                    <input type="text" id="cust-phone" required placeholder="Ví dụ: 0912..." class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="col_rank">Cấp hạng thành viên</label>
+                        <select id="cust-rank" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white font-semibold">
+                            <option value="Sliver">Bạc (Silver - Giảm 5%)</option>
+                            <option value="Gold">Vàng (Gold - Giảm 10%)</option>
+                            <option value="Diamond">Kim Cương (Diamond - Giảm 15%)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="col_points">Tích điểm hiện tại</label>
+                        <input type="number" id="cust-points" value="0" min="0" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                    </div>
+                </div>
+                <div class="p-5 bg-slate-50 -mx-6 -mb-6 border-t border-slate-200 flex justify-between gap-2">
+                    <div>
+                        <button type="button" id="delete-customer-btn" onclick="deleteCustomerFromModal()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-4 py-2.5 rounded-lg hidden" data-i18n="btn_delete_cust">Xóa hội viên</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 text-xs font-bold text-slate-500" data-i18n="btn_close">Thoát</button>
+                        <button type="submit" class="bg-emerald-600 text-white text-xs font-extrabold px-5 py-2.5 rounded-lg" data-i18n="btn_save_config">LƯU THÔNG TIN</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. MODAL: ADD/EDIT SERVICE ITEM -->
+    <div id="service-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex justify-between items-center">
+                <h3 id="service-modal-title" class="font-bold">Thêm / Sửa dịch vụ, nước uống</h3>
+                <button onclick="closeServiceForm()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleServiceSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-service-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="col_item_name">Tên dịch vụ / đồ uống / giờ chơi</label>
+                    <input type="text" id="service-name" required placeholder="Ví dụ: Bia Heineken, Giờ chơi ngày thường..." class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="service_price_lbl">Đơn giá bán (đ)</label>
+                    <input type="number" id="service-price" required placeholder="Ví dụ: 30000" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="col_category">Phân loại</label>
+                    <select id="service-category" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white font-semibold">
+                        <option value="Giờ chơi">Giờ chơi (ຊົ່ວໂມງຫຼິ້ນ)</option>
+                        <option value="Đồ uống">Đồ uống (ເຄື່ອງດື່ມ)</option>
+                        <option value="Thức ăn">Thức ăn nhẹ (ອາຫານຫວ່າງ)</option>
+                        <option value="Thuê đồ">Phí thuê đồ (ຄ່າເຊົ່າອຸປະກອນ)</option>
+                        <option value="Khác">Tiện ích khác (ອື່ນໆ)</option>
+                    </select>
+                </div>
+                <div class="p-5 bg-slate-50 -mx-6 -mb-6 border-t border-slate-200 flex justify-between gap-2">
+                    <div>
+                        <button type="button" id="delete-service-btn" onclick="deleteServiceFromModal()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-4 py-2.5 rounded-lg hidden" data-i18n="btn_delete">Xóa dịch vụ</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeServiceForm()" class="px-4 py-2 text-xs font-bold text-slate-500" data-i18n="btn_cancel">Hủy</button>
+                        <button type="submit" class="bg-emerald-600 text-white text-xs font-extrabold px-5 py-2.5 rounded-lg" data-i18n="btn_confirm">CẬP NHẬT</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. MODAL: EDIT TRANSACTION -->
+    <div id="edit-transaction-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex justify-between items-center">
+                <h3 class="font-bold" data-i18n="edit_tx_modal_title">Chỉnh sửa Giao dịch / Thu - Chi</h3>
+                <button onclick="closeEditTransactionModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleEditTransactionSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-tx-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_tx_type">Loại Giao Dịch</label>
+                        <select id="edit-tx-type" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
+                            <option value="THU">THU VÀO</option>
+                            <option value="CHI">CHI RA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_payment_method">Phương thức</label>
+                        <select id="edit-tx-method" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
+                            <option value="CHUYEN_KHOAN">Chuyển khoản</option>
+                            <option value="TIEN_MAT">Tiền mặt</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Edit Time Field -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_datetime">Thời gian giao dịch</label>
+                    <input type="datetime-local" id="edit-tx-time" required class="w-full border border-slate-200 p-2.5 rounded-lg text-xs font-semibold bg-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_amount">Số tiền (đ)</label>
+                        <input type="number" id="edit-tx-amount" required class="w-full border border-slate-200 p-2.5 rounded-lg text-sm font-semibold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_category">Danh mục</label>
+                        <select id="edit-tx-category" class="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
+                            <option value="Giờ chơi">Giờ chơi</option>
+                            <option value="Bán nước / Đồ ăn">Bán nước / Đồ ăn</option>
+                            <option value="Phí phụ thu khác">Phí phụ thu khác</option>
+                            <option value="Mua sắm thiết bị">Mua sắm thiết bị</option>
+                            <option value="Sửa chữa bảo trì">Sửa chữa bảo trì</option>
+                            <option value="Tiền điện / Tiền nước">Tiền điện / Tiền nước</option>
+                            <option value="Chi phí khác">Chi phí khác</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_receipt_image">Biên lai ngân hàng (Cập nhật ảnh mới)</label>
+                    <div class="flex items-center gap-2">
+                        <label class="flex-1 flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 p-2 rounded-lg cursor-pointer bg-slate-50 transition text-slate-500 hover:text-emerald-600 text-xs">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span id="edit-tx-upload-text" class="truncate" data-i18n="btn_choose_img">Tải ảnh mới lên...</span>
+                            <input type="file" id="edit_tx_receipt_file" accept="image/*" class="hidden" onchange="handleEditTxReceiptSelect(this)">
+                        </label>
+                        <button type="button" id="edit-tx-receipt-clear" onclick="clearEditTxReceipt()" class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center hover:bg-rose-100 transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <div id="edit-tx-receipt-preview" class="mt-2 hidden">
+                        <img src="" class="h-20 w-auto rounded-lg object-contain border border-slate-200">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1" data-i18n="field_note">Nội dung giao dịch</label>
+                    <textarea id="edit-tx-desc" rows="3" required class="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white"></textarea>
+                </div>
+                <div class="p-5 bg-slate-50 -mx-6 -mb-6 border-t border-slate-200 flex justify-between gap-2">
+                    <button type="button" onclick="deleteTransaction()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-4 py-2.5 rounded-lg" data-i18n="btn_delete">Xóa Giao Dịch</button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeEditTransactionModal()" class="px-4 py-2 text-xs font-bold text-slate-500" data-i18n="btn_close">Đóng</button>
+                        <button type="submit" class="bg-emerald-600 text-white text-xs font-extrabold px-5 py-2.5 rounded-lg" data-i18n="btn_confirm">LƯU THÀNH CÔNG</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7. MODAL: IMAGE LIGHTBOX VIEWER -->
+    <div id="lightbox" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden" onclick="closeLightbox()">
+        <div class="max-w-xl w-full flex flex-col gap-2" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center text-white mb-2">
+                <span id="lightbox-title" class="font-bold text-sm">Hình ảnh biên lai giao dịch</span>
+                <button onclick="closeLightbox()" class="text-white hover:text-slate-300"><i class="fa-solid fa-circle-xmark text-2xl"></i></button>
+            </div>
+            <img id="lightbox-image" src="" alt="Receipt proof" class="max-h-[75vh] w-auto mx-auto rounded-xl object-contain shadow-2xl bg-white p-2">
+        </div>
+    </div>
+
+
+    <!-- UI MESSAGE POPUP (No Alert rule) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-[100]">
+        <span class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold" id="toast-icon">
+            <i class="fa-solid fa-check"></i>
+        </span>
+        <div>
+            <p id="toast-message" class="font-semibold text-xs">Cập nhật thành công!</p>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // --- TRANSLATION TABLES (VIETNAMESE & LAO) ---
+        const i18n = {
+            vi: {
+                nav_dashboard: "Bảng điều khiển",
+                nav_room: "Phòng chơi Live",
+                nav_bookings: "Lịch đặt phòng trước",
+                nav_services: "Dịch vụ & Giờ chơi",
+                nav_transactions: "Thu chi & Sổ quỹ",
+                nav_customers: "Khách hàng hội viên",
+                nav_reports: "Hiệu suất hoạt động",
+                storage_system: "HỆ THỐNG LƯU TRỮ",
+                btn_backup: "Sao lưu",
+                btn_restore: "Khôi phục",
+                role_admin: "Quản trị viên",
+                btn_quick_book: "Đặt phòng nhanh",
+                dash_revenue_today: "Doanh thu hôm nay",
+                dash_all_services: "Từ tất cả các dịch vụ",
+                dash_playtime_today: "Thời gian chơi hôm nay",
+                dash_actual_time: "Tính theo thời gian thực",
+                dash_bookings_today: "Lịch hẹn hôm nay",
+                dash_pending_check: "Chờ check-in",
+                dash_net_balance: "Số dư thực tế còn tồn",
+                dash_cash_transfer: "Cả tiền mặt & ck",
+                dash_quick_tx_title: "Ghi nhận Thu / Chi nhanh",
+                field_tx_type: "Loại giao dịch",
+                field_payment_method: "Phương thức thanh toán",
+                field_datetime: "Ngày & Giờ phát sinh",
+                field_amount: "Số tiền (đ)",
+                field_category: "Danh mục",
+                field_receipt_image: "Ảnh biên lai chuyển khoản",
+                field_note: "Ghi chú chi tiết",
+                btn_save_tx: "Ghi nhận giao dịch",
+                tx_income: "Thu vào",
+                tx_expense: "Chi ra",
+                pay_transfer: "Chuyển khoản",
+                pay_cash: "Tiền mặt",
+                btn_choose_img: "Tải ảnh...",
+                room_config_title: "Thiết lập Phòng Golf Private VIP",
+                room_config_desc: "Cấu hình đơn giá thuê và loại phòng cố định cho cửa hàng",
+                room_name_label: "Tên phòng Private",
+                room_type_label: "Kiểu phân hạng phòng",
+                room_price_label: "Giá thuê mỗi giờ (mặc định) (đ)",
+                btn_save_config: "Lưu cấu hình",
+                bookings_title: "Danh sách lịch đặt phòng trước",
+                bookings_desc: "Theo dõi, tiếp đón các lượt chơi đã đăng ký trước",
+                btn_add_booking: "Thêm Lịch Đặt Mới",
+                col_cust_name: "Tên Khách Hàng",
+                col_phone: "Số Điện Thoại",
+                col_room: "Phòng Yêu Cầu",
+                col_checkin_time: "Thời Gian Nhận Phòng",
+                col_duration: "Thời Lượng Dự Kiến",
+                col_status: "Trạng Thái",
+                col_actions: "Thao Tác",
+                bookings_empty: "Hiện tại chưa có lịch đặt sân nào.",
+                menu_title: "Danh mục dịch vụ & Bảng giá giờ chơi",
+                menu_desc: "Thêm và cấu hình Giờ chơi, Đồ ăn thức uống hoặc thuê giày/gậy",
+                btn_add_service: "Thêm Tiện Ích",
+                guide_title: "Hướng dẫn thiết lập giờ chơi",
+                guide_p1: "1. Để tạo một gói giờ chơi mới, hãy nhấn nút <b>\"Thêm Tiện Ích\"</b> và lựa chọn phân loại là <b>\"Giờ chơi\"</b>.",
+                guide_p2: "2. Điền tên gói giờ chơi (Ví dụ: <i>\"Giờ chơi VIP ngày thường\"</i>, <i>\"Chơi cuối tuần 18 hố\"</i>) cùng mức giá tương ứng cho một giờ.",
+                guide_p3: "3. Khi bắt đầu mở phòng cho khách hàng chơi, bạn sẽ dễ dàng lựa chọn gói giờ chơi này để hệ thống tính giá chính xác nhất.",
+                popular_services: "Dịch vụ bán chạy nhất",
+                stat_total_income: "Tổng thu",
+                stat_total_expense: "Tổng chi",
+                stat_bank_balance: "Quỹ chuyển khoản",
+                stat_cash_balance: "Quỹ tiền mặt",
+                stat_total_balance: "Tổng tồn quỹ",
+                ledger_title: "Nhật ký thu chi & hóa đơn thanh toán",
+                ledger_desc: "Kiểm tra mốc thời gian, loại quỹ và minh chứng của từng hoạt động",
+                opt_all_tx: "Tất cả giao dịch",
+                opt_income_only: "Chỉ các khoản Thu",
+                opt_expense_only: "Chỉ các khoản Chi",
+                opt_all_methods: "Tất cả phương thức",
+                col_tx_id: "Mã GD",
+                col_time: "Thời Gian",
+                col_type: "Loại",
+                col_method: "Phương Thức",
+                col_proof: "Minh chứng",
+                cust_title: "Hội viên & Khách hàng thân thiết",
+                cust_desc: "Quản lý tích điểm, áp dụng mức chiết khấu thông minh",
+                btn_add_customer: "Thêm Hội Viên Mới",
+                col_rank: "Hạng Hội Viên",
+                col_points: "Tích Điểm",
+                col_discount: "Mức Giảm Giá",
+                col_total_spent: "Tổng Tiêu Dùng",
+                chart_title: "Thống kê hoạt động thực tế 7 ngày gần nhất",
+                occupancy_title: "Hiệu năng Phòng Private VIP",
+                live_timer: "Thời gian chơi trực tiếp",
+                temp_hourly_cost: "Tạm tính tiền giờ chơi",
+                invoice_items_title: "Sử dụng dịch vụ & Đồ dùng",
+                btn_add_services_invoice: "Gọi nước & Thêm tiện ích",
+                picker_title: "Chọn đồ ăn / đồ uống / giờ chơi:",
+                btn_add_fee: "Thêm phí",
+                col_item_name: "Khoản mục",
+                col_qty: "SL",
+                col_price: "Đơn giá",
+                col_subtotal: "Thành tiền",
+                col_remove: "Bỏ",
+                field_membership: "Khách hàng hội viên:",
+                invoice_pay_title: "Xác nhận thanh toán",
+                play_cost_label: "Tiền giờ chơi:",
+                service_cost_label: "Tiền dịch vụ & phát sinh:",
+                discount_label: "Chiết khấu hội viên:",
+                total_cost_label: "TỔNG THANH TOÁN:",
+                btn_close: "Đóng",
+                btn_confirm_checkout: "THANH TOÁN & TRẢ PHÒNG",
+                start_session_title: "Bắt đầu phiên chơi mới",
+                field_cust_name: "Tên khách hàng",
+                field_timing_package: "Gói cước / Đơn giá giờ chơi áp dụng",
+                field_start_time: "Thời điểm bắt đầu chơi",
+                field_caddie: "Sử dụng caddie hỗ trợ (+50.000 ₫/giờ)",
+                btn_cancel: "Hủy",
+                btn_start_now: "BẮT ĐẦU NGAY",
+                btn_cancel_booking: "Hủy lịch đặt",
+                btn_confirm: "Xác nhận",
+                btn_delete_cust: "Xóa hội viên",
+                btn_delete: "Xóa",
+                service_price_lbl: "Đơn giá bán (đ)",
+                edit_tx_modal_title: "Chỉnh sửa Giao dịch / Thu - Chi",
+                stat_active: "Đang chơi",
+                stat_available: "Sẵn sàng đón khách",
+                stat_cleaning: "Đang dọn dẹp",
+                stat_maintenance: "Đang bảo trì",
+                card_title_live: "Điều khiển Phòng Private VIP",
+                card_desc_live: "Theo dõi, tính tiền và gọi dịch vụ trực tiếp tại phòng đơn",
+                card_btn_open: "Mở phiên chơi",
+                card_btn_clean: "Hoàn tất dọn phòng",
+                card_lbl_status: "Trạng thái",
+                card_lbl_rate: "Đơn giá mặc định",
+                lbl_unlimited: "Tính giờ thực tế khi kết thúc",
+                msg_deleted: "Đã xóa thành công khỏi cơ sở dữ liệu."
+            },
+            la: {
+                nav_dashboard: "ກະດານຄວບຄຸມ",
+                nav_room: "ຫ້ອງຫຼິ້ນສົດ",
+                nav_bookings: "ລາຍການຈອງລ່ວງໜ້າ",
+                nav_services: "ບໍລິການ & ຊົ່ວໂມງຫຼິ້ນ",
+                nav_transactions: "ລາຍຮັບ-ລາຍຈ່າຍ & ຄັງເງິນ",
+                nav_customers: "ລູກຄ້າສະມາຊິກ",
+                nav_reports: "ປະສິດທິພາບການເຮັດວຽກ",
+                storage_system: "ລະບົບຈັດເກັບຂໍ້ມູນ",
+                btn_backup: "ສຳຮອງຂໍ້ມູນ",
+                btn_restore: "ຟື້ນຟູຂໍ້ມູນ",
+                role_admin: "ຜູ້ດູແລລະບົບ",
+                btn_quick_book: "ຈອງຫ້ອງດ່ວນ",
+                dash_revenue_today: "ລາຍຮັບມື້ນີ້",
+                dash_all_services: "ຈາກທຸກບໍລິການ",
+                dash_playtime_today: "ເວລາຫຼິ້ນມື້ນີ້",
+                dash_actual_time: "ຄິດໄລ່ຕາມເວລາຈິງ",
+                dash_bookings_today: "ຄິວຈອງມື້ນີ້",
+                dash_pending_check: "ລໍຖ້າ Check-in",
+                dash_net_balance: "ຍອດເງິນຄົງເຫຼືອຕົວຈິງ",
+                dash_cash_transfer: "ທັງເງິນສົດ & ໂອນ",
+                dash_quick_tx_title: "ບັນທຶກ ລາຍຮັບ / ລາຍຈ່າຍ ດ່ວນ",
+                field_tx_type: "ປະເພດທຸລະກຳ",
+                field_payment_method: "ຊ່ອງທາງການຊຳລະ",
+                field_datetime: "ວັນທີ & ເວລາ",
+                field_amount: "ຈຳນວນເງິນ (ກີບ/ດົງ)",
+                field_category: "ໝວດໝູ່",
+                field_receipt_image: "ຮູບໃບບິນການໂອນເງິນ",
+                field_note: "ໝາຍເຫດລະອຽດ",
+                btn_save_tx: "ບັນທຶກທຸລະກຳ",
+                tx_income: "ລາຍຮັບ",
+                tx_expense: "ລາຍຈ່າຍ",
+                pay_transfer: "ໂອນເງິນ",
+                pay_cash: "ເງິນສົດ",
+                btn_choose_img: "ເລືອກຮູບ...",
+                room_config_title: "ຕັ້ງຄ່າ ຫ້ອງກອຟ Private VIP",
+                room_config_desc: "ກຳນົດລາຄາເຊົ່າ ແລະ ປະເພດຫ້ອງຄົງທີ່ຂອງຮ້ານ",
+                room_name_label: "ຊື່ຫ້ອງ Private",
+                room_type_label: "ປະເພດການຈັດແບ່ງຫ້ອງ",
+                room_price_label: "ລາຄາເຊົ່າຕໍ່ຊົ່ວໂມງ (ກີບ/ດົງ)",
+                btn_save_config: "ບັນທຶກການຕັ້ງຄ່າ",
+                bookings_title: "ລາຍການຈອງຫ້ອງລ່ວງໜ້າ",
+                bookings_desc: "ຕິດຕາມ, ຕ້ອນຮັບການຫຼິ້ນ Private ທີ່ໄດ້ລົງທະບຽນລ່ວງໜ້າ",
+                btn_add_booking: "ເພີ່ມການຈອງໃໝ່",
+                col_cust_name: "ຊື່ລູກຄ້າ",
+                col_phone: "ເບີໂທລະສັບ",
+                col_room: "ຫ້ອງທີ່ຕ້ອງການ",
+                col_checkin_time: "ເວລາເຂົ້າຫ້ອງ",
+                col_duration: "ເວລາຄາດຄະເນ",
+                col_status: "ສະຖານະ",
+                col_actions: "ຈັດການ",
+                bookings_empty: "ປັດຈຸບັນຍັງບໍ່ມີການຈອງເທື່ອ.",
+                menu_title: "ລາຍການບໍລິການ & ລາຄາຊົ່ວໂມງຫຼິ້ນ",
+                menu_desc: "ເພີ່ມ ແລະ ຕັ້ງຄ່າ ຊົ່ວໂມງຫຼິ້ນ, ອາຫານ ເຄື່ອງດື່ມ ຫຼື ເຊົ່າອຸປະກອນ",
+                btn_add_service: "ເພີ່ມບໍລິການ",
+                guide_title: "ຄຳແນະນຳການຕັ້ງຄ່າຊົ່ວໂມງຫຼິ້ນ",
+                guide_p1: "1. ເພື່ອສ້າງແພັກເກດຊົ່ວໂມງຫຼິ້ນໃໝ່, ໃຫ້ກົດປຸ່ມ <b>\"ເພີ່ມບໍລິການ\"</b> ແລະ ເລືອກປະເພດເປັນ <b>\"ຊົ່ວໂມງຫຼິ້ນ\"</b>.",
+                guide_p2: "2. ໃສ່ຊື່ແພັກເກດ (ຕົວຢ່າງ: <i>\"ຊົ່ວໂມງຫຼິ້ນ VIP ວັນທຳມະດາ\"</i>, <i>\"ຫຼິ້ນທ້າຍອາທິດ 18 ຂຸມ\"</i>) ພ້ອມລາຄາຕໍ່ຊົ່ວໂມງ.",
+                guide_p3: "3. ເມື່ອເລີ່ມເປີດຫ້ອງໃຫ້ລູກຄ້າຫຼິ້ນ, ທ່ານສາມາດເລືອກແພັກເກດຊົ່ວໂມງຫຼິ້ນນີ້ເພື່ອໃຫ້ລະບົບຄິດໄລ່ລາຄາຢ່າງຖືກຕ້ອງທີ່ສຸດ.",
+                popular_services: "ບໍລິການທີ່ຂາຍດີທີ່ສຸດ",
+                stat_total_income: "ລາຍຮັບລວມ",
+                stat_total_expense: "ລາຍຈ່າຍລວມ",
+                stat_bank_balance: "ບັນຊີເງິນໂອນ",
+                stat_cash_balance: "ຄັງເງິນສົດ",
+                stat_total_balance: "ຍອດເງິນຄົງເຫຼືອລວມ",
+                ledger_title: "ບັນທຶກລາຍຮັບ-ລາຍຈ່າຍ & ໃບບິນ",
+                ledger_desc: "ກວດສອບເວລາ, ປະເພດຄັງເງິນ ແລະ ຫຼັກຖານຂອງແຕ່ລະກິດຈະກຳ",
+                opt_all_tx: "ທຸກທຸລະກຳ",
+                opt_income_only: "ສະເພາະ ລາຍຮັບ",
+                opt_expense_only: "ສະເພາະ ລາຍຈ່າຍ",
+                opt_all_methods: "ທຸກຊ່ອງທາງ",
+                col_tx_id: "ລະຫັດ",
+                col_time: "ເວລາ",
+                col_type: "ປະເພດ",
+                col_method: "ຊ່ອງທາງ",
+                col_proof: "ຫຼັກຖານ",
+                cust_title: "ສະມາຊິກ & ລູກຄ້າປະຈຳ",
+                cust_desc: "ຈັດການຄະແນນສະສົມ, ນຳໃຊ້ສ່ວນຫຼຸດພິເສດ",
+                btn_add_customer: "ເພີ່ມສະມາຊິກໃໝ່",
+                col_rank: "ລະດັບສະມາຊິກ",
+                col_points: "ຄະແນນສະສົມ",
+                col_discount: "ສ່ວນຫຼຸດ",
+                col_total_spent: "ຍອດໃຊ້ຈ່າຍລວມ",
+                chart_title: "ສະຖິຕິການເຄື່ອນໄຫວຕົວຈິງ 7 ວັນຫຼ້າສຸດ",
+                occupancy_title: "ປະສິດທິພາບ ຫ້ອງ Private VIP",
+                live_timer: "ເວລາຫຼິ້ນສົດ",
+                temp_hourly_cost: "ຄ່າຊົ່ວໂມງຫຼິ້ນຊົ່ວຄາວ",
+                invoice_items_title: "ການໃຊ້ບໍລິການ & ອຸປະກອນ",
+                btn_add_services_invoice: "ສັ່ງເຄື່ອງດື່ມ & ເພີ່ມບໍລິການ",
+                picker_title: "ເລືອກອາຫານ / ເຄື່ອງດື່ມ / ຊົ່ວໂມງຫຼິ້ນ:",
+                btn_add_fee: "ເພີ່ມຄ່າທຳນຽມ",
+                col_item_name: "ລາຍການ",
+                col_qty: "ຈຳນວນ",
+                col_price: "ລາຄາຕໍ່ໜ່ວຍ",
+                col_subtotal: "ລວມເປັນເງິນ",
+                col_remove: "ລຶບ",
+                field_membership: "ລູກຄ້າສະມາຊິກ:",
+                invoice_pay_title: "ຢືນຢັນການຊຳລະເງິນ",
+                play_cost_label: "ຄ່າຊົ່ວໂມງຫຼິ້ນ:",
+                service_cost_label: "ຄ່າບໍລິການອື່ນໆ:",
+                discount_label: "ສ່ວນຫຼຸດສະມາຊິກ:",
+                total_cost_label: "ຍອດຊຳລະລວມ:",
+                btn_close: "ປິດ",
+                btn_confirm_checkout: "ຊຳລະເງິນ & ປິດຫ້ອງ",
+                start_session_title: "ເລີ່ມຮອບຫຼິ້ນໃໝ່",
+                field_cust_name: "ຊື່ລູກຄ້າ",
+                field_timing_package: "ແພັກເກດລາຄາຊົ່ວໂມງຫຼິ້ນທີ່ນຳໃຊ້",
+                field_start_time: "ເວລາເລີ່ມຫຼິ້ນ",
+                field_caddie: "ຕ້ອງການ Caddie ຊ່ວຍເຫຼືອ (+50.000 ກີບ/ດົງ/ຊມ)",
+                btn_cancel: "ຍົກເລີກ",
+                btn_start_now: "ເລີ່ມຫຼິ້ນທັນທີ",
+                btn_cancel_booking: "ຍົກເລີກການຈອງ",
+                btn_confirm: "ຢືນຢັນ",
+                btn_delete_cust: "ລຶບສະມາຊິກ",
+                btn_delete: "ລຶບ",
+                service_price_lbl: "ລາຄາຂາຍ (ກີບ/ດົງ)",
+                edit_tx_modal_title: "ແກ້ໄຂ ລາຍຮັບ - ລາຍຈ່າຍ",
+                stat_active: "ກຳລັງຫຼິ້ນ",
+                stat_available: "ຫວ່າງ / ພ້ອມບໍລິການ",
+                stat_cleaning: "ກຳລັງອະນາໄມ",
+                stat_maintenance: "ກຳລັງປັບປຸງ",
+                card_title_live: "ຄວບຄຸມ ຫ້ອງ Private VIP",
+                card_desc_live: "ຕິດຕາມ, ຄິດໄລ່ເງິນ ແລະ ສັ່ງບໍລິການໂດຍກົງໃນຫ້ອງດຽວ",
+                card_btn_open: "ເປີດຫ້ອງຫຼິ້ນ",
+                card_btn_clean: "ອະນາໄມຫ້ອງສຳເລັດ",
+                card_lbl_status: "ສະຖານະ",
+                card_lbl_rate: "ລາຄາມາດຕະຖານ",
+                lbl_unlimited: "ຄິດໄລ່ຕາມເວລາຫຼິ້ນຈິງຕອນປິດຫ້ອງ",
+                msg_deleted: "ລຶບຂໍ້ມູນອອກຈາກລະບົບສຳເລັດແລ້ວ."
+            }
+        };
+
+        let currentLanguage = 'vi';
+
+        // --- HARD DATA CONFIGURATIONS FOR 1 PRIVATE ROOM (With Local Storage fallbacks) ---
+        let roomPrivate = {
+            name: "Phòng Private Diamond 01",
+            type: "VIP",
+            pricePerHour: 350000,
+            status: "AVAILABLE",
+            currentSession: null
+        };
+
+        let services = [
+            // Game hourly packages (Phân loại Giờ chơi)
+            { id: "s-hourly-1", name: "Giờ chơi Ngày thường (ຊົ່ວໂມງຫຼິ້ນວັນທຳມະດາ)", price: 300000, category: "Giờ chơi" },
+            { id: "s-hourly-2", name: "Giờ chơi Cuối tuần & Lễ (ຊົ່ວໂມງຫຼິ້ນທ້າຍອາທິດ)", price: 400000, category: "Giờ chơi" },
+            { id: "s-hourly-3", name: "Gói Trải Nghiệm Golf 18 Hố VIP", price: 800000, category: "Giờ chơi" },
+            // Food and drink list
+            { id: "s-1", name: "Bia Heineken (ເບຍ)", price: 35000, category: "Đồ uống" },
+            { id: "s-2", name: "Nước ngọt Coca-Cola (ນ້ຳຫວານ)", price: 25000, category: "Đồ uống" },
+            { id: "s-3", name: "Snack khoai tây lạp xưởng (ມັນຝລັ່ງ)", price: 20000, category: "Thức ăn" },
+            { id: "s-4", name: "Set đồ ăn nhẹ trái cây (ໝາກໄມ້)", price: 150000, category: "Thức ăn" },
+            { id: "s-5", name: "Thuê gậy TaylorMade cao cấp (ເຊົ່າໄມ້ກອຟ)", price: 150000, category: "Thuê đồ" }
+        ];
+
+        let bookings = [];
+        let customers = [];
+        let transactions = [];
+
+        // Global variables for edit states
+        let tempQuickReceiptBase64 = "";
+        let tempModalReceiptBase64 = "";
+        let tempEditTxReceiptBase64 = "";
+
+        let selectedRoomId = "private-room"; // Static single room id
+        let selectedFilter = 'ALL';
+        let revenueChart = null;
+
+        // --- LOCAL STORAGE DATA AUTO-SAVE & AUTO-LOAD SYSTEM ---
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('golf_private_room', JSON.stringify(roomPrivate));
+                localStorage.setItem('golf_services_list', JSON.stringify(services));
+                localStorage.setItem('golf_bookings_list', JSON.stringify(bookings));
+                localStorage.setItem('golf_customers_list', JSON.stringify(customers));
+                localStorage.setItem('golf_transactions_list', JSON.stringify(transactions));
+                localStorage.setItem('golf_selected_lang', currentLanguage);
+            } catch (e) {
+                console.error("Local Storage Save Error: ", e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const storedRoom = localStorage.getItem('golf_private_room');
+                const storedServices = localStorage.getItem('golf_services_list');
+                const storedBookings = localStorage.getItem('golf_bookings_list');
+                const storedCustomers = localStorage.getItem('golf_customers_list');
+                const storedTransactions = localStorage.getItem('golf_transactions_list');
+                const storedLang = localStorage.getItem('golf_selected_lang');
+
+                if (storedRoom) roomPrivate = JSON.parse(storedRoom);
+                if (storedServices) services = JSON.parse(storedServices);
+                if (storedBookings) bookings = JSON.parse(storedBookings);
+                if (storedCustomers) customers = JSON.parse(storedCustomers);
+                if (storedTransactions) transactions = JSON.parse(storedTransactions);
+                if (storedLang) currentLanguage = storedLang;
+            } catch (e) {
+                console.error("Local Storage Load Error: ", e);
+            }
+        }
+
+        // Starters
+        window.onload = function() {
+            // Load state first
+            loadFromLocalStorage();
+
+            // Set current UI time for datepicker inputs
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('tx_time').value = now.toISOString().slice(0, 16);
+
+            // Clock interval
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // Render current selected language
+            setLanguage(currentLanguage);
+
+            // Startup refreshes
+            switchTab('dashboard');
+            calculateDashboardKPIs();
+            renderPrivateRoomCard();
+            renderBookings();
+            renderServices();
+            renderTransactions();
+            renderCustomers();
+            initRevenueChart();
+
+            // Start timer loops
+            setInterval(updateActiveRoomTimers, 1000);
+        };
+
+        // --- EXPORT & IMPORT UTILITIES (Sao lưu & Khôi phục dữ liệu ra file ngoài) ---
+        function exportData() {
+            const backupData = {
+                roomPrivate,
+                services,
+                bookings,
+                customers,
+                transactions,
+                currentLanguage
+            };
+            const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(backupData))}`;
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", jsonString);
+            downloadAnchor.setAttribute("download", `GOLF_PRIVATE_BACKUP_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast(currentLanguage === 'vi' ? "Đã xuất file sao lưu dữ liệu thành công!" : "ສຳຮອງຂໍ້ມູນສຳເລັດແລ້ວ!");
+        }
+
+        function importData(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (imported.roomPrivate && imported.services) {
+                            roomPrivate = imported.roomPrivate;
+                            services = imported.services;
+                            bookings = imported.bookings || [];
+                            customers = imported.customers || [];
+                            transactions = imported.transactions || [];
+                            if (imported.currentLanguage) currentLanguage = imported.currentLanguage;
+
+                            saveToLocalStorage();
+                            
+                            // Hot refresh UI
+                            setLanguage(currentLanguage);
+                            calculateDashboardKPIs();
+                            renderPrivateRoomCard();
+                            renderBookings();
+                            renderServices();
+                            renderTransactions();
+                            renderCustomers();
+                            if (revenueChart) {
+                                updateReportsAndCharts();
+                            }
+                            showToast(currentLanguage === 'vi' ? "Đã nhập và khôi phục dữ liệu thành công!" : "ຟື້ນຟູຂໍ້ມູນທັງໝົດສຳເລັດແລ້ວ!");
+                        } else {
+                            showToast(currentLanguage === 'vi' ? "File sao lưu không đúng định dạng!" : "ຟາຍຂໍ້ມູນບໍ່ຖືກຕ້ອງ!", false);
+                        }
+                    } catch (err) {
+                        showToast(currentLanguage === 'vi' ? "Lỗi đọc file dữ liệu!" : "ເກີດຂໍ້ຜິດພາດໃນການອ່ານຟາຍ!", false);
+                    }
+                };
+                reader.readAsText(input.files[0]);
+            }
+        }
+
+        // --- MULTI-LANGUAGE TRANSLATION RENDERING ENGINE ---
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            saveToLocalStorage();
+
+            // Toggle Header flags
+            const btnVi = document.getElementById('lang-btn-vi');
+            const btnLa = document.getElementById('lang-btn-la');
+            if (lang === 'vi') {
+                btnVi.className = "px-2 py-1 text-xs font-extrabold rounded-md bg-emerald-600 text-white shadow-sm transition";
+                btnLa.className = "px-2 py-1 text-xs font-extrabold rounded-md text-slate-600 hover:bg-slate-100 transition";
+            } else {
+                btnLa.className = "px-2 py-1 text-xs font-extrabold rounded-md bg-emerald-600 text-white shadow-sm transition";
+                btnVi.className = "px-2 py-1 text-xs font-extrabold rounded-md text-slate-600 hover:bg-slate-100 transition";
+            }
+
+            // Translate DOM elements holding "data-i18n"
+            const translateElements = document.querySelectorAll('[data-i18n]');
+            translateElements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) {
+                    el.innerHTML = i18n[lang][key];
+                }
+            });
+
+            // Re-render components with translated static variables
+            renderPrivateRoomCard();
+            renderBookings();
+            renderServices();
+            renderTransactions();
+            renderCustomers();
+        }
+
+        function getTranslation(key) {
+            return i18n[currentLanguage][key] || key;
+        }
+
+        // --- CLOCK & CURRENCY FORMATS ---
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+            document.getElementById('header-clock').innerText = timeStr;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+            if (isSuccess) {
+                toastIcon.className = "w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold";
+                toastIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+            } else {
+                toastIcon.className = "w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white font-bold";
+                toastIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // --- TAB CONTROLLERS ---
+        function switchTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.add('hidden'));
+
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+
+            const navButtons = document.querySelectorAll('.nav-item');
+            navButtons.forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('bg-emerald-600', 'text-white', 'shadow-md', 'shadow-emerald-950/40');
+                    btn.classList.remove('text-emerald-200', 'hover:bg-emerald-900/40');
+                } else {
+                    btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-md', 'shadow-emerald-950/40');
+                    btn.classList.add('text-emerald-200', 'hover:bg-emerald-900/40');
+                }
+            });
+
+            // Set current Tab Header Name
+            const tabTitlesVi = {
+                'dashboard': 'Bảng điều khiển & Giám sát Phòng Private VIP',
+                'rooms': 'Thiết lập Phòng Golf Private',
+                'bookings': 'Lịch hẹn & Đặt phòng trước',
+                'services': 'Menu Dịch vụ ăn uống & Giờ chơi',
+                'transactions': 'Sổ quỹ thu chi & Hóa đơn chuyển khoản',
+                'customers': 'Quản lý hội viên thân thiết',
+                'reports': 'Báo cáo hiệu năng & Doanh thu thực tế'
+            };
+
+            const tabTitlesLa = {
+                'dashboard': 'ກະດານຄວບຄຸມ ແລະ ຕິດຕາມ ຫ້ອງ Private VIP',
+                'rooms': 'ຕັ້ງຄ່າ ຫ້ອງກອຟ Private',
+                'bookings': 'ລາຍການຈອງຫ້ອງລ່ວງໜ້າ',
+                'services': 'ບໍລິການ, ອາຫານ ເຄື່ອງດື່ມ & ຊົ່ວໂມງຫຼິ້ນ',
+                'transactions': 'ບັນທຶກລາຍຮັບ-ລາຍຈ່າຍ & ໃບບິນ',
+                'customers': 'ຈັດການສະມາຊິກ ແລະ ຄະແນນສະສົມ',
+                'reports': 'ລາຍງານປະສິດທິພາບ ແລະ ລາຍຮັບຕົວຈິງ'
+            };
+
+            const title = currentLanguage === 'vi' ? tabTitlesVi[tabId] : tabTitlesLa[tabId];
+            document.getElementById('current-tab-title').innerText = title || 'GOLF PRIVATE';
+
+            if (tabId === 'dashboard') {
+                calculateDashboardKPIs();
+            } else if (tabId === 'rooms') {
+                document.getElementById('config-room-name').value = roomPrivate.name;
+                document.getElementById('config-room-type').value = roomPrivate.type;
+                document.getElementById('config-room-price').value = roomPrivate.pricePerHour;
+            } else if (tabId === 'reports') {
+                updateReportsAndCharts();
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSidebarMobile() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+
+        // --- DASHBOARD ANALYTICS ---
+        function calculateDashboardKPIs() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            let dailyRevenue = 0;
+            transactions.forEach(t => {
+                if (t.type === 'THU' && t.time.startsWith(today)) {
+                    dailyRevenue += t.amount;
+                }
+            });
+
+            let dailyPlaytime = 0;
+            if (roomPrivate.status === 'PLAYING' && roomPrivate.currentSession) {
+                const diffMs = new Date() - new Date(roomPrivate.currentSession.startTime);
+                dailyPlaytime = diffMs / (1000 * 60 * 60);
+            }
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+            transactions.forEach(t => {
+                if (t.type === 'THU') totalIncome += t.amount;
+                if (t.type === 'CHI') totalExpense += t.amount;
+            });
+
+            document.getElementById('dash-revenue').innerText = formatCurrency(dailyRevenue);
+            document.getElementById('dash-playtime').innerText = dailyPlaytime.toFixed(1) + ' h';
+            document.getElementById('dash-bookings').innerText = bookings.filter(b => b.status === 'PENDING').length;
+            document.getElementById('dash-net').innerText = formatCurrency(totalIncome - totalExpense);
+
+            renderPrivateRoomCard();
+        }
+
+        // --- SINGLE PRIVATE ROOM CONTROL CENTER ---
+        function renderPrivateRoomCard() {
+            const container = document.getElementById('private-room-live-card');
+            if (!container) return;
+
+            let statusBg = 'bg-emerald-500';
+            let statusBorder = 'border-emerald-200';
+            let statusText = getTranslation('stat_available');
+            let infoArea = '';
+            let actionBtn = '';
+
+            if (roomPrivate.status === 'PLAYING') {
+                statusBg = 'bg-amber-500 animate-pulse';
+                statusBorder = 'border-amber-300';
+                statusText = getTranslation('stat_active');
+
+                const session = roomPrivate.currentSession;
+                const dateStart = new Date(session.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                
+                infoArea = `
+                    <div class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-slate-400 block font-semibold uppercase tracking-wider">${getTranslation('field_cust_name')}</span>
+                                <span class="font-extrabold text-slate-800 text-sm">${session.customerName}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block font-semibold uppercase tracking-wider">${getTranslation('field_start_time')}</span>
+                                <span class="font-extrabold text-slate-800 text-sm">${dateStart}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2.5 border-t border-slate-200/60">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-regular fa-clock text-slate-500"></i>
+                                <span id="dash-timer-live" class="font-mono font-black text-slate-700 text-base">00:00:00</span>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">${formatCurrency(session.customHourlyRate || roomPrivate.pricePerHour)} / h</span>
+                        </div>
+                    </div>
+                `;
+
+                actionBtn = `
+                    <button onclick="selectAndOpenRoom('private-room')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-receipt"></i> ${getTranslation('btn_confirm_checkout')}
+                    </button>
+                `;
+            } else if (roomPrivate.status === 'CLEANING') {
+                statusBg = 'bg-blue-500';
+                statusBorder = 'border-blue-200';
+                statusText = getTranslation('stat_cleaning');
+
+                infoArea = `
+                    <div class="mt-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-center">
+                        <p class="text-xs text-blue-700 font-semibold mb-2">${getTranslation('stat_cleaning')}</p>
+                        <button onclick="setRoomAvailable()" class="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-1.5 rounded-lg transition">${getTranslation('card_btn_clean')}</button>
+                    </div>
+                `;
+
+                actionBtn = `
+                    <button disabled class="w-full bg-slate-100 text-slate-400 font-bold text-xs py-3 rounded-xl cursor-not-allowed">
+                        ${getTranslation('stat_cleaning')}...
+                    </button>
+                `;
+            } else {
+                // Available
+                infoArea = `
+                    <div class="mt-4 p-5 rounded-xl bg-slate-50 border border-slate-100 text-center text-slate-400 italic text-xs">
+                        ${getTranslation('stat_available')}
+                    </div>
+                `;
+
+                actionBtn = `
+                    <button onclick="selectAndOpenRoom('private-room')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-play"></i> ${getTranslation('card_btn_open')}
+                    </button>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded">${getTranslation('card_title_live')}</span>
+                            <h3 class="font-extrabold text-slate-800 text-lg mt-1">${roomPrivate.name}</h3>
+                            <p class="text-xs text-slate-500">${getTranslation('card_desc_live')}</p>
+                        </div>
+                        <div class="flex items-center gap-2 border ${statusBorder} px-3 py-1 rounded-full bg-slate-50">
+                            <span class="w-2.5 h-2.5 rounded-full ${statusBg}"></span>
+                            <span class="text-xs font-bold text-slate-700">${statusText}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs py-1">
+                        <span class="text-slate-400 font-semibold">${getTranslation('card_lbl_rate')}:</span>
+                        <span class="font-bold text-slate-800">${formatCurrency(roomPrivate.pricePerHour)} / ${getTranslation('col_duration').toLowerCase()}</span>
+                    </div>
+
+                    ${infoArea}
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100/80">
+                    ${actionBtn}
+                </div>
+            `;
+        }
+
+        function setRoomAvailable() {
+            roomPrivate.status = 'AVAILABLE';
+            saveToLocalStorage();
+            showToast(currentLanguage === 'vi' ? "Phòng Private đã dọn dẹp xong và sẵn sàng tiếp khách!" : "ຫ້ອງພ້ອມບໍລິການແລ້ວ!");
+            renderPrivateRoomCard();
+            calculateDashboardKPIs();
+        }
+
+        // --- TIMER UPDATERS ---
+        function updateActiveRoomTimers() {
+            if (roomPrivate.status === 'PLAYING' && roomPrivate.currentSession) {
+                const elapsedMs = new Date() - new Date(roomPrivate.currentSession.startTime);
+                const totalSecs = Math.floor(elapsedMs / 1000);
+                const hours = Math.floor(totalSecs / 3600);
+                const minutes = Math.floor((totalSecs % 3600) / 60);
+                const seconds = totalSecs % 60;
+                
+                const formattedTime = [
+                    hours.toString().padStart(2, '0'),
+                    minutes.toString().padStart(2, '0'),
+                    seconds.toString().padStart(2, '0')
+                ].join(':');
+
+                // Live card timers
+                const cardTimer = document.getElementById('dash-timer-live');
+                if (cardTimer) cardTimer.innerText = formattedTime;
+
+                // Modal timers
+                const modalOpen = document.getElementById('room-modal');
+                if (modalOpen && !modalOpen.classList.contains('hidden')) {
+                    document.getElementById('session-timer').innerText = formattedTime;
+                    
+                    const rate = roomPrivate.currentSession.customHourlyRate || roomPrivate.pricePerHour;
+                    const elapsedHours = totalSecs / 3600;
+                    const playCost = Math.round(elapsedHours * (rate + (roomPrivate.currentSession.hasCaddie ? 50000 : 0)));
+                    
+                    document.getElementById('session-playtime-cost').innerText = formatCurrency(playCost);
+                    updateModalCalculations();
+                }
+            }
+        }
+
+        // --- SAVE ROOM CONFIG ---
+        function saveRoomConfig() {
+            const name = document.getElementById('config-room-name').value.trim();
+            const price = parseInt(document.getElementById('config-room-price').value) || 0;
+
+            if (!name || price <= 0) {
+                showToast(currentLanguage === 'vi' ? "Vui lòng nhập tên phòng và đơn giá hợp lệ!" : "ກະລຸນາໃສ່ຂໍ້ມູນໃຫ້ຖືກຕ້ອງ!", false);
+                return;
+            }
+
+            roomPrivate.name = name;
+            roomPrivate.pricePerHour = price;
+            saveToLocalStorage();
+
+            showToast(currentLanguage === 'vi' ? "Đã lưu cấu hình phòng Private VIP thành công!" : "ບັນທຶກການຕັ້ງຄ່າສຳເລັດ!");
+            renderPrivateRoomCard();
+        }
+
+        // --- SESSION CONTROL (START / END) ---
+        function selectAndOpenRoom(roomId) {
+            // Static 1 room
+            document.getElementById('room-modal-title').innerText = roomPrivate.name;
+            document.getElementById('room-modal-subtitle').innerText = `${roomPrivate.type} • Private Single Room`;
+            document.getElementById('room-modal-rate').innerText = `${formatCurrency(roomPrivate.pricePerHour)}/giờ`;
+
+            const badge = document.getElementById('room-modal-badge');
+            badge.innerText = roomPrivate.status === 'AVAILABLE' ? getTranslation('stat_available') : (roomPrivate.status === 'CLEANING' ? getTranslation('stat_cleaning') : getTranslation('stat_active'));
+            badge.className = `px-2 py-1 rounded text-xs font-bold uppercase border ${
+                roomPrivate.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 
+                (roomPrivate.status === 'CLEANING' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-amber-100 text-amber-800 border-amber-200 animate-pulse')
+            }`;
+
+            const primaryActionBox = document.getElementById('room-modal-primary-action');
+            const timerSection = document.getElementById('room-modal-timer-section');
+            const billingDetails = document.getElementById('room-modal-billing-details');
+            const checkoutBtn = document.getElementById('modal-checkout-btn');
+            
+            document.getElementById('service-picker').classList.add('hidden');
+            clearModalReceipt();
+
+            if (roomPrivate.status === 'AVAILABLE') {
+                timerSection.classList.add('hidden');
+                billingDetails.classList.add('hidden');
+                checkoutBtn.classList.add('hidden');
+
+                primaryActionBox.innerHTML = `
+                    <button onclick="openStartSessionModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-play"></i> ${getTranslation('card_btn_open').toUpperCase()}
+                    </button>
+                `;
+            } else if (roomPrivate.status === 'PLAYING') {
+                timerSection.classList.remove('hidden');
+                billingDetails.classList.remove('hidden');
+                checkoutBtn.classList.remove('hidden');
+
+                primaryActionBox.innerHTML = `
+                    <button onclick="finishSessionPrompt()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-stop"></i> CHỐT BILL THANH TOÁN
+                    </button>
+                `;
+
+                populateModalCustomerDropdown();
+                renderRoomInvoiceItems();
+                toggleModalReceiptField(document.getElementById('modal-payment-method').value);
+            } else if (roomPrivate.status === 'CLEANING') {
+                timerSection.classList.add('hidden');
+                billingDetails.classList.add('hidden');
+                checkoutBtn.classList.add('hidden');
+
+                primaryActionBox.innerHTML = `
+                    <button onclick="setRoomAvailable()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-broom"></i> ${getTranslation('card_btn_clean').toUpperCase()}
+                    </button>
+                `;
+            }
+
+            document.getElementById('room-modal').classList.remove('hidden');
+        }
+
+        function closeRoomModal() {
+            document.getElementById('room-modal').classList.add('hidden');
+        }
+
+        // START SESSION PACKAGES DROPDOWN LOADER
+        function openStartSessionModal() {
+            closeRoomModal();
+            document.getElementById('start-customer-name').value = 'Khách vãng lai';
+            document.getElementById('start-with-assistant').checked = false;
+
+            // Set current real date and time as default backdate value
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('start-time').value = now.toISOString().slice(0, 16);
+
+            // Populate packages from Services
+            const select = document.getElementById('start-pricing-package');
+            select.innerHTML = '';
+            
+            // Default pricing
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "DEFAULT";
+            defaultOpt.innerText = `${getTranslation('card_lbl_rate')}: ${formatCurrency(roomPrivate.pricePerHour)} / giờ`;
+            select.appendChild(defaultOpt);
+
+            // Hourly packages inside services list
+            const hourlyServices = services.filter(s => s.category === 'Giờ chơi');
+            hourlyServices.forEach(hs => {
+                const opt = document.createElement('option');
+                opt.value = hs.id;
+                opt.innerText = `${hs.name} - ${formatCurrency(hs.price)} / giờ`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('start-session-modal').classList.remove('hidden');
+        }
+
+        function closeStartSessionModal() {
+            document.getElementById('start-session-modal').classList.add('hidden');
+        }
+
+        function confirmStartSession() {
+            const customerName = document.getElementById('start-customer-name').value.trim() || 'Khách vãng lai';
+            const selectedPkgId = document.getElementById('start-pricing-package').value;
+            const startTimeVal = document.getElementById('start-time').value;
+            const hasCaddie = document.getElementById('start-with-assistant').checked;
+
+            let rateSelected = roomPrivate.pricePerHour;
+            if (selectedPkgId !== 'DEFAULT') {
+                const pkg = services.find(s => s.id === selectedPkgId);
+                if (pkg) rateSelected = pkg.price;
+            }
+
+            // Convert backdate inputs
+            const finalStartTime = startTimeVal ? new Date(startTimeVal).toISOString() : new Date().toISOString();
+
+            roomPrivate.status = 'PLAYING';
+            roomPrivate.currentSession = {
+                customerName: customerName,
+                startTime: finalStartTime,
+                hasCaddie: hasCaddie,
+                customHourlyRate: rateSelected,
+                servicesPurchased: [],
+                customFees: [],
+                selectedCustomerId: ""
+            };
+
+            saveToLocalStorage();
+            closeStartSessionModal();
+            showToast(currentLanguage === 'vi' ? `Bắt đầu lượt chơi cho khách "${customerName}" thành công!` : "ເລີ່ມຮອບຫຼິ້ນສຳເລັດ!");
+            renderPrivateRoomCard();
+            calculateDashboardKPIs();
+            selectAndOpenRoom('private-room');
+        }
+
+        function finishSessionPrompt() {
+            updateModalCalculations();
+            showToast(currentLanguage === 'vi' ? "Lượt chơi đã kết thúc. Vui lòng thanh toán." : "ຮອບຫຼິ້ນສິ້ນສຸດແລ້ວ! ກະລຸນາຊຳລະເງິນ.");
+        }
+
+        // --- MENU / WATER SERVICES ON BILLING ---
+        function toggleServicePicker() {
+            const picker = document.getElementById('service-picker');
+            picker.classList.toggle('hidden');
+
+            if (!picker.classList.contains('hidden')) {
+                const list = document.getElementById('picker-services-list');
+                list.innerHTML = '';
+                // Load services except "Giờ chơi" categories to keep minibar selection simple
+                const miniBarItems = services.filter(s => s.category !== 'Giờ chơi');
+                miniBarItems.forEach(serv => {
+                    const btn = document.createElement('button');
+                    btn.className = "flex justify-between items-center bg-white hover:bg-emerald-50 text-left p-2 border border-slate-200 rounded-lg text-[11px] font-bold hover:border-emerald-500 transition duration-150";
+                    btn.type = "button";
+                    btn.onclick = () => addServiceToActiveRoom(serv);
+                    btn.innerHTML = `
+                        <span class="truncate pr-1">${serv.name}</span>
+                        <span class="text-emerald-700 shrink-0">${formatCurrency(serv.price)}</span>
+                    `;
+                    list.appendChild(btn);
+                });
+            }
+        }
+
+        function addServiceToActiveRoom(serviceItem) {
+            if (roomPrivate.status === 'PLAYING') {
+                const session = roomPrivate.currentSession;
+                const existing = session.servicesPurchased.find(item => item.serviceId === serviceItem.id);
+                
+                if (existing) {
+                    existing.quantity += 1;
+                } else {
+                    session.servicesPurchased.push({
+                        serviceId: serviceItem.id,
+                        name: serviceItem.name,
+                        price: serviceItem.price,
+                        quantity: 1
+                    });
+                }
+                
+                showToast(`+1x ${serviceItem.name}`);
+                renderRoomInvoiceItems();
+                updateModalCalculations();
+            }
+        }
+
+        function addCustomFeeToRoom() {
+            const name = document.getElementById('custom-fee-name').value.trim();
+            const price = parseInt(document.getElementById('custom-fee-price').value);
+
+            if (!name || isNaN(price) || price <= 0) {
+                showToast("Vui lòng điền đúng thông tin phụ phí!", false);
+                return;
+            }
+
+            if (roomPrivate.status === 'PLAYING') {
+                roomPrivate.currentSession.customFees.push({
+                    name: name,
+                    price: price
+                });
+
+                document.getElementById('custom-fee-name').value = '';
+                document.getElementById('custom-fee-price').value = '';
+                
+                showToast(`+ ${name}`);
+                renderRoomInvoiceItems();
+                updateModalCalculations();
+            }
+        }
+
+        function removeInvoiceItem(type, itemId) {
+            if (roomPrivate.status === 'PLAYING') {
+                const session = roomPrivate.currentSession;
+                if (type === 'service') {
+                    session.servicesPurchased = session.servicesPurchased.filter(item => item.serviceId !== itemId);
+                } else if (type === 'fee') {
+                    session.customFees.splice(itemId, 1);
+                }
+                
+                showToast(currentLanguage === 'vi' ? "Đã gỡ khoản mục!" : "ລຶບລາຍການສຳເລັດ!");
+                renderRoomInvoiceItems();
+                updateModalCalculations();
+            }
+        }
+
+        function renderRoomInvoiceItems() {
+            if (!roomPrivate.currentSession) return;
+
+            const tbody = document.getElementById('room-items-tbody');
+            tbody.innerHTML = '';
+            const session = roomPrivate.currentSession;
+
+            let rowCount = 0;
+
+            session.servicesPurchased.forEach(item => {
+                rowCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-3 py-2 font-semibold text-slate-800">${item.name}</td>
+                    <td class="px-3 py-2 text-center font-bold">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="changeQty('${item.serviceId}', -1)" class="w-5 h-5 rounded bg-slate-100 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="changeQty('${item.serviceId}', 1)" class="w-5 h-5 rounded bg-slate-100 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200">+</button>
+                        </div>
+                    </td>
+                    <td class="px-3 py-2 text-right text-slate-500">${formatCurrency(item.price)}</td>
+                    <td class="px-3 py-2 text-right font-bold text-slate-700">${formatCurrency(item.price * item.quantity)}</td>
+                    <td class="px-3 py-2 text-center">
+                        <button onclick="removeInvoiceItem('service', '${item.serviceId}')" class="text-slate-400 hover:text-rose-600 transition"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            session.customFees.forEach((fee, index) => {
+                rowCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-3 py-2 font-semibold text-slate-800">${fee.name} (${getTranslation('col_proof').toLowerCase()})</td>
+                    <td class="px-3 py-2 text-center">1</td>
+                    <td class="px-3 py-2 text-right text-slate-500">${formatCurrency(fee.price)}</td>
+                    <td class="px-3 py-2 text-right font-bold text-slate-700">${formatCurrency(fee.price)}</td>
+                    <td class="px-3 py-2 text-center">
+                        <button onclick="removeInvoiceItem('fee', ${index})" class="text-slate-400 hover:text-rose-600 transition"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (rowCount === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-3 py-6 text-center text-slate-400 font-medium italic">${getTranslation('bookings_empty')}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function changeQty(serviceId, amount) {
+            if (roomPrivate.status === 'PLAYING') {
+                const item = roomPrivate.currentSession.servicesPurchased.find(i => i.serviceId === serviceId);
+                if (item) {
+                    item.quantity += amount;
+                    if (item.quantity <= 0) {
+                        removeInvoiceItem('service', serviceId);
+                    } else {
+                        renderRoomInvoiceItems();
+                        updateModalCalculations();
+                    }
+                }
+            }
+        }
+
+        // MEMBERS DISCOUNTS
+        function populateModalCustomerDropdown() {
+            const select = document.getElementById('modal-select-customer');
+            select.innerHTML = `<option value="">${currentLanguage === 'vi' ? 'Khách vãng lai (Không giảm giá)' : 'ລູກຄ້າທົ່ວໄປ (ບໍ່ມີສ່ວນຫຼຸດ)'}</option>`;
+            customers.forEach(cust => {
+                const opt = document.createElement('option');
+                opt.value = cust.id;
+                opt.innerText = `${cust.name} - ${cust.phone} (${getRankNameVi(cust.rank)})`;
+                select.appendChild(opt);
+            });
+
+            if (roomPrivate.currentSession && roomPrivate.currentSession.selectedCustomerId) {
+                select.value = roomPrivate.currentSession.selectedCustomerId;
+            }
+            applyCustomerDiscount();
+        }
+
+        function applyCustomerDiscount() {
+            const custId = document.getElementById('modal-select-customer').value;
+            const discountLabel = document.getElementById('member-discount-label');
+            const discountLine = document.getElementById('member-discount-line');
+
+            if (roomPrivate.currentSession) {
+                roomPrivate.currentSession.selectedCustomerId = custId;
+            }
+
+            if (!custId) {
+                discountLabel.innerText = "Giảm: 0%";
+                discountLine.classList.add('hidden');
+                updateModalCalculations();
+                return;
+            }
+
+            const customer = customers.find(c => c.id === custId);
+            if (customer) {
+                const discountPercent = getRankDiscountPercent(customer.rank);
+                discountLabel.innerText = `Giảm: ${discountPercent}% (${getRankNameVi(customer.rank)})`;
+                discountLine.classList.remove('hidden');
+            }
+            updateModalCalculations();
+        }
+
+        function getRankDiscountPercent(rank) {
+            switch(rank) {
+                case 'Sliver': return 5;
+                case 'Gold': return 10;
+                case 'Diamond': return 15;
+                default: return 0;
+            }
+        }
+
+        function getRankNameVi(rank) {
+            switch(rank) {
+                case 'Sliver': return currentLanguage === 'vi' ? 'Bạc' : 'ລະດັບ ເງິນ';
+                case 'Gold': return currentLanguage === 'vi' ? 'Vàng' : 'ລະດັບ ຄຳ';
+                case 'Diamond': return currentLanguage === 'vi' ? 'Kim cương' : 'ລະດັບ ເພັດ';
+                default: return 'Phổ thông';
+            }
+        }
+
+        function updateModalCalculations() {
+            if (!roomPrivate.currentSession) return;
+
+            const session = roomPrivate.currentSession;
+            const elapsedMs = new Date() - new Date(session.startTime);
+            const totalSecs = Math.max(0, Math.floor(elapsedMs / 1000));
+
+            const rateApplied = session.customHourlyRate || roomPrivate.pricePerHour;
+            const durationHrs = totalSecs / 3600;
+            const playCost = Math.round(durationHrs * (rateApplied + (session.hasCaddie ? 50000 : 0)));
+
+            let servicesCost = 0;
+            session.servicesPurchased.forEach(item => {
+                servicesCost += item.price * item.quantity;
+            });
+            session.customFees.forEach(fee => {
+                servicesCost += fee.price;
+            });
+
+            let discountAmount = 0;
+            const custId = document.getElementById('modal-select-customer').value;
+            if (custId) {
+                const customer = customers.find(c => c.id === custId);
+                if (customer) {
+                    const pct = getRankDiscountPercent(customer.rank);
+                    discountAmount = Math.round((playCost + servicesCost) * (pct / 100));
+                }
+            }
+
+            const finalTotal = (playCost + servicesCost) - discountAmount;
+
+            document.getElementById('sum-play-cost').innerText = formatCurrency(playCost);
+            document.getElementById('sum-service-cost').innerText = formatCurrency(servicesCost);
+            document.getElementById('sum-discount').innerText = `-${formatCurrency(discountAmount)}`;
+            document.getElementById('sum-total').innerText = formatCurrency(finalTotal);
+
+            session.playCost = playCost;
+            session.servicesCost = servicesCost;
+            session.discountAmount = discountAmount;
+            session.finalTotal = finalTotal;
+            session.totalPlaySecs = totalSecs;
+        }
+
+        function toggleModalReceiptField(value) {
+            const container = document.getElementById('modal-receipt-container');
+            if (value === 'CHUYEN_KHOAN') {
+                container.classList.remove('opacity-40');
+                container.querySelector('input').disabled = false;
+            } else {
+                container.classList.add('opacity-40');
+                container.querySelector('input').disabled = true;
+                clearModalReceipt();
+            }
+        }
+
+        function handleModalReceiptSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempModalReceiptBase64 = e.target.result;
+                    document.getElementById('modal-receipt-preview').classList.remove('hidden');
+                    document.getElementById('modal-receipt-preview').querySelector('img').src = e.target.result;
+                    document.getElementById('modal-upload-text').innerText = input.files[0].name;
+                    document.getElementById('modal-receipt-clear').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearModalReceipt() {
+            tempModalReceiptBase64 = "";
+            document.getElementById('modal_receipt_file').value = "";
+            document.getElementById('modal-receipt-preview').classList.add('hidden');
+            document.getElementById('modal-receipt-preview').querySelector('img').src = "";
+            document.getElementById('modal-upload-text').innerText = getTranslation('btn_choose_img');
+            document.getElementById('modal-receipt-clear').classList.add('hidden');
+        }
+
+        // --- CHECKOUT PROCESS ---
+        function checkoutRoom() {
+            if (roomPrivate.status === 'PLAYING') {
+                const s = roomPrivate.currentSession;
+                const method = document.getElementById('modal-payment-method').value;
+                const finalImg = method === 'CHUYEN_KHOAN' ? tempModalReceiptBase64 : "";
+
+                const transactionId = `TX-${Math.floor(100000 + Math.random() * 900000)}`;
+                const playHrs = (s.totalPlaySecs / 3600).toFixed(1);
+
+                const newTx = {
+                    id: transactionId,
+                    time: new Date().toISOString(),
+                    type: "THU",
+                    amount: s.finalTotal,
+                    category: "Giờ chơi",
+                    desc: currentLanguage === 'vi' 
+                        ? `Thanh toán phòng VIP (${playHrs}h chơi, Khách: ${s.customerName})`
+                        : `ຊຳລະຫ້ອງຫຼິ້ນ (${playHrs} ຊມ, ລູກຄ້າ: ${s.customerName})`,
+                    paymentMethod: method,
+                    receiptImg: finalImg
+                };
+
+                transactions.unshift(newTx);
+
+                if (s.selectedCustomerId) {
+                    const customer = customers.find(c => c.id === s.selectedCustomerId);
+                    if (customer) {
+                        const earnedPoints = Math.floor(s.finalTotal / 100000);
+                        customer.points += earnedPoints;
+                        customer.totalSpent += s.finalTotal;
+                    }
+                }
+
+                roomPrivate.status = 'CLEANING';
+                roomPrivate.currentSession = null;
+
+                saveToLocalStorage();
+                closeRoomModal();
+                showToast(currentLanguage === 'vi' ? "Đã thanh toán hóa đơn phòng VIP thành công!" : "ຊຳລະໃບບິນສຳເລັດແລ້ວ!");
+                
+                renderPrivateRoomCard();
+                renderTransactions();
+                renderCustomers();
+                calculateDashboardKPIs();
+            }
+        }
+
+        // --- BOOKING OPERATIONS (CRUD) ---
+        function openBookingModal(editId = null) {
+            if (editId) {
+                const b = bookings.find(item => item.id === editId);
+                if (!b) return;
+
+                document.getElementById('edit-booking-id').value = b.id;
+                document.getElementById('book-customer').value = b.customerName;
+                document.getElementById('book-phone').value = b.phone;
+                document.getElementById('book-time').value = b.time;
+                document.getElementById('book-duration').value = b.duration;
+
+                document.getElementById('booking-modal-title').innerText = currentLanguage === 'vi' ? "Chỉnh sửa lịch đặt phòng" : "ແກ້ໄຂລາຍການຈອງ";
+                document.getElementById('delete-booking-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('edit-booking-id').value = '';
+                document.getElementById('book-customer').value = '';
+                document.getElementById('book-phone').value = '';
+                
+                const future = new Date();
+                future.setHours(future.getHours() + 2);
+                document.getElementById('book-time').value = future.toISOString().slice(0, 16);
+                document.getElementById('book-duration').value = '2';
+
+                document.getElementById('booking-modal-title').innerText = currentLanguage === 'vi' ? "Đăng ký lịch đặt phòng mới" : "ເພີ່ມການຈອງຫ້ອງໃໝ່";
+                document.getElementById('delete-booking-btn').classList.add('hidden');
+            }
+
+            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+        }
+
+        function handleBookingSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-booking-id').value;
+            const customer = document.getElementById('book-customer').value.trim();
+            const phone = document.getElementById('book-phone').value.trim();
+            const time = document.getElementById('book-time').value;
+            const duration = parseInt(document.getElementById('book-duration').value);
+
+            if (editId) {
+                const b = bookings.find(item => item.id === editId);
+                if (b) {
+                    b.customerName = customer;
+                    b.phone = phone;
+                    b.time = time;
+                    b.duration = duration;
+                    showToast(currentLanguage === 'vi' ? `Cập nhật lịch của "${customer}" thành công!` : "ແກ້ໄຂຂໍ້ມູນສຳເລັດ!");
+                }
+            } else {
+                const newBooking = {
+                    id: `b-${bookings.length + 1}`,
+                    customerName: customer,
+                    phone: phone,
+                    roomId: "private-room",
+                    time: time,
+                    duration: duration,
+                    status: "PENDING"
+                };
+                bookings.unshift(newBooking);
+                showToast(currentLanguage === 'vi' ? `Đã thêm lịch đặt phòng mới!` : "ເພີ່ມການຈອງໃໝ່ສຳເລັດ!");
+            }
+
+            saveToLocalStorage();
+            closeBookingModal();
+            renderBookings();
+            calculateDashboardKPIs();
+        }
+
+        function deleteBooking() {
+            const editId = document.getElementById('edit-booking-id').value;
+            if (editId) {
+                bookings = bookings.filter(b => b.id !== editId);
+                saveToLocalStorage();
+                showToast(getTranslation('msg_deleted'));
+                closeBookingModal();
+                renderBookings();
+                calculateDashboardKPIs();
+            }
+        }
+
+        function renderBookings() {
+            const tbody = document.getElementById('bookings-table-body');
+            const emptyState = document.getElementById('bookings-empty-state');
+            tbody.innerHTML = '';
+
+            if (bookings.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            bookings.forEach(b => {
+                const dateFormatted = new Date(b.time).toLocaleString('vi-VN', {
+                    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                let statusBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">${currentLanguage==='vi'?'Chờ nhận':'ລໍຖ້າຫ້ອງ'}</span>`;
+                let actionBtn = `
+                    <button onclick="checkInBooking('${b.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition mr-1">${currentLanguage==='vi'?'Nhận Phòng':'ເຂົ້າຫ້ອງ'}</button>
+                    <button onclick="openBookingModal('${b.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition"><i class="fa-solid fa-pen"></i></button>
+                `;
+
+                if (b.status === 'COMPLETED') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold">${currentLanguage==='vi'?'Đã nhận':'ເຂົ້າຫຼິ້ນແລ້ວ'}</span>`;
+                    actionBtn = `<span class="text-xs text-slate-400 italic">${currentLanguage==='vi'?'Hoàn tất':'ສຳເລັດແລ້ວ'}</span>`;
+                } else if (b.status === 'CANCELLED') {
+                    statusBadge = `<span class="bg-rose-100 text-rose-800 px-2 py-1 rounded text-xs font-bold">Đã Hủy</span>`;
+                    actionBtn = `<span class="text-xs text-slate-400 italic">Đã hủy</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-slate-800">${b.customerName}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-500">${b.phone}</td>
+                    <td class="px-6 py-4 font-bold text-slate-600">Phòng Private 01</td>
+                    <td class="px-6 py-4 text-slate-700">${dateFormatted}</td>
+                    <td class="px-6 py-4 text-slate-600">${b.duration} ${getTranslation('col_duration').toLowerCase()}</td>
+                    <td class="px-6 py-4">${statusBadge}</td>
+                    <td class="px-6 py-4 text-right">${actionBtn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function checkInBooking(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (booking) {
+                if (roomPrivate.status === 'PLAYING') {
+                    showToast(currentLanguage === 'vi' ? "Phòng Private Diamond đang bận phục vụ lượt chơi khác!" : "ຫ້ອງກຳລັງບໍ່ຫວ່າງ!", false);
+                    return;
+                }
+
+                booking.status = 'COMPLETED';
+                roomPrivate.status = 'PLAYING';
+                roomPrivate.currentSession = {
+                    customerName: booking.customerName,
+                    startTime: new Date().toISOString(),
+                    hasCaddie: false,
+                    servicesPurchased: [],
+                    customFees: [],
+                    selectedCustomerId: ""
+                };
+
+                saveToLocalStorage();
+                showToast(currentLanguage === 'vi' ? `Khách đặt "${booking.customerName}" đã check-in thành công!` : "Check-in ສຳເລັດ!");
+                renderBookings();
+                renderPrivateRoomCard();
+                calculateDashboardKPIs();
+                switchTab('dashboard');
+                selectAndOpenRoom('private-room');
+            }
+        }
+
+        // --- SERVICES/MENU CRUD ACTIONS ---
+        function openServiceForm(editId = null) {
+            if (editId) {
+                const s = services.find(item => item.id === editId);
+                if (!s) return;
+
+                document.getElementById('edit-service-id').value = s.id;
+                document.getElementById('service-name').value = s.name;
+                document.getElementById('service-price').value = s.price;
+                document.getElementById('service-category').value = s.category;
+
+                document.getElementById('service-modal-title').innerText = currentLanguage==='vi'?"Chỉnh sửa dịch vụ":"ແກ້ໄຂບໍລິການ";
+                document.getElementById('delete-service-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('edit-service-id').value = '';
+                document.getElementById('service-name').value = '';
+                document.getElementById('service-price').value = '';
+                document.getElementById('service-category').value = 'Giờ chơi';
+
+                document.getElementById('service-modal-title').innerText = currentLanguage==='vi'?"Thêm dịch vụ & tiện ích":"ເພີ່ມບໍລິການໃໝ່";
+                document.getElementById('delete-service-btn').classList.add('hidden');
+            }
+
+            document.getElementById('service-modal').classList.remove('hidden');
+        }
+
+        function closeServiceForm() {
+            document.getElementById('service-modal').classList.add('hidden');
+        }
+
+        function handleServiceSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-service-id').value;
+            const name = document.getElementById('service-name').value.trim();
+            const price = parseInt(document.getElementById('service-price').value);
+            const category = document.getElementById('service-category').value;
+
+            if (editId) {
+                const s = services.find(item => item.id === editId);
+                if (s) {
+                    s.name = name;
+                    s.price = price;
+                    s.category = category;
+                    showToast(currentLanguage === 'vi' ? "Đã lưu thay đổi tiện ích!" : "ແກ້ໄຂຂໍ້ມູນສຳເລັດ!");
+                }
+            } else {
+                const newService = {
+                    id: `s-${services.length + 1}`,
+                    name: name,
+                    price: price,
+                    category: category
+                };
+                services.push(newService);
+                showToast(currentLanguage === 'vi' ? "Đã thêm thành công vào danh mục!" : "ເພີ່ມເຂົ້າລາຍການສຳເລັດ!");
+            }
+
+            saveToLocalStorage();
+            closeServiceForm();
+            renderServices();
+        }
+
+        function deleteServiceFromModal() {
+            const editId = document.getElementById('edit-service-id').value;
+            if (editId) {
+                services = services.filter(s => s.id !== editId);
+                saveToLocalStorage();
+                showToast(getTranslation('msg_deleted'));
+                closeServiceForm();
+                renderServices();
+            }
+        }
+
+        function renderServices() {
+            const grid = document.getElementById('services-grid');
+            grid.innerHTML = '';
+
+            services.forEach(serv => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between hover:shadow-md transition";
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-bold uppercase block w-max mb-1.5">${serv.category}</span>
+                        <h4 class="font-bold text-slate-800 text-xs leading-tight">${serv.name}</h4>
+                        <span class="text-xs font-extrabold text-emerald-700 block mt-1">${formatCurrency(serv.price)}</span>
+                    </div>
+                    <div class="flex flex-col items-end gap-1.5">
+                        <button onclick="openServiceForm('${serv.id}')" class="text-slate-400 hover:text-emerald-600 transition" title="Chỉnh sửa dịch vụ"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            renderServiceLeaderboards();
+        }
+
+        // --- MANAGE CUSTOMERS: ADD, EDIT & DELETE (CRUD) ---
+        function openCustomerModal(editId = null) {
+            if (editId) {
+                const c = customers.find(item => item.id === editId);
+                if (!c) return;
+
+                document.getElementById('edit-customer-id').value = c.id;
+                document.getElementById('cust-name').value = c.name;
+                document.getElementById('cust-phone').value = c.phone;
+                document.getElementById('cust-rank').value = c.rank;
+                document.getElementById('cust-points').value = c.points;
+
+                document.getElementById('customer-modal-title').innerText = currentLanguage==='vi'?"Chỉnh sửa thông tin hội viên":"ແກ້ໄຂຂໍ້ມູນສະມາຊິກ";
+                document.getElementById('delete-customer-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('edit-customer-id').value = '';
+                document.getElementById('cust-name').value = '';
+                document.getElementById('cust-phone').value = '';
+                document.getElementById('cust-rank').value = 'Sliver';
+                document.getElementById('cust-points').value = '0';
+
+                document.getElementById('customer-modal-title').innerText = currentLanguage==='vi'?"Đăng ký thành viên mới":"ເພີ່ມສະມາຊິກໃໝ່";
+                document.getElementById('delete-customer-btn').classList.add('hidden');
+            }
+
+            document.getElementById('customer-modal').classList.remove('hidden');
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customer-modal').classList.add('hidden');
+        }
+
+        function handleCustomerSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-customer-id').value;
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const rank = document.getElementById('cust-rank').value;
+            const points = parseInt(document.getElementById('cust-points').value) || 0;
+
+            if (editId) {
+                const c = customers.find(item => item.id === editId);
+                if (c) {
+                    c.name = name;
+                    c.phone = phone;
+                    c.rank = rank;
+                    c.points = points;
+                    showToast(currentLanguage === 'vi' ? "Đã lưu thông tin khách hàng!" : "ແກ້ໄຂຂໍ້ມູນສະມາຊິກສຳເລັດ!");
+                }
+            } else {
+                const newCust = {
+                    id: `cust-${customers.length + 1}`,
+                    name: name,
+                    phone: phone,
+                    rank: rank,
+                    points: points,
+                    totalSpent: 0
+                };
+                customers.push(newCust);
+                showToast(currentLanguage === 'vi' ? "Chào mừng hội viên thân thiết mới!" : "ເພີ່ມສະມາຊິກໃໝ່ສຳເລັດ!");
+            }
+
+            saveToLocalStorage();
+            closeCustomerModal();
+            renderCustomers();
+        }
+
+        function deleteCustomerFromModal() {
+            const editId = document.getElementById('edit-customer-id').value;
+            if (editId) {
+                customers = customers.filter(c => c.id !== editId);
+                saveToLocalStorage();
+                showToast(getTranslation('msg_deleted'));
+                closeCustomerModal();
+                renderCustomers();
+            }
+        }
+
+        function renderCustomers() {
+            const tbody = document.getElementById('customers-table-body');
+            tbody.innerHTML = '';
+
+            customers.forEach(c => {
+                let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                let discountPct = "5%";
+
+                if (c.rank === 'Gold') {
+                    badgeColor = "bg-amber-100 text-amber-800 border-amber-200";
+                    discountPct = "10%";
+                } else if (c.rank === 'Diamond') {
+                    badgeColor = "bg-cyan-100 text-cyan-800 border-cyan-200";
+                    discountPct = "15%";
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-slate-800">${c.name}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-500">${c.phone}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded text-xs font-bold border ${badgeColor}">${getRankNameVi(c.rank)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center font-bold text-emerald-600">${c.points} điểm</td>
+                    <td class="px-6 py-4 text-center font-extrabold text-indigo-700">${discountPct}</td>
+                    <td class="px-6 py-4 text-right font-extrabold text-slate-700">${formatCurrency(c.totalSpent)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="openCustomerModal('${c.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg transition mr-1"><i class="fa-solid fa-pen-to-square"></i> ${getTranslation('btn_confirm')}</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- TRANSACTIONS LOGS & IMAGES (CRUD) ---
+        function handleQuickReceiptSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempQuickReceiptBase64 = e.target.result;
+                    document.getElementById('quick-receipt-preview').classList.remove('hidden');
+                    document.getElementById('quick-receipt-preview').querySelector('img').src = e.target.result;
+                    document.getElementById('quick-upload-text').innerText = input.files[0].name;
+                    document.getElementById('quick-receipt-clear').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearQuickReceipt() {
+            tempQuickReceiptBase64 = "";
+            document.getElementById('tx_receipt').value = "";
+            document.getElementById('quick-receipt-preview').classList.add('hidden');
+            document.getElementById('quick-receipt-preview').querySelector('img').src = "";
+            document.getElementById('quick-upload-text').innerText = getTranslation('btn_choose_img');
+            document.getElementById('quick-receipt-clear').classList.add('hidden');
+        }
+
+        function togglePaymentMethodLabels(radio) {
+            const labels = radio.closest('.grid').querySelectorAll('label');
+            labels.forEach(lbl => {
+                lbl.className = "flex items-center justify-center gap-1 border border-slate-200 bg-slate-50 text-slate-600 p-2 rounded-lg cursor-pointer text-xs font-semibold transition select-none";
+            });
+
+            if (radio.checked) {
+                radio.parentElement.className = "flex items-center justify-center gap-1 border border-indigo-500 bg-indigo-50 text-indigo-700 p-2 rounded-lg cursor-pointer text-xs font-semibold transition select-none";
+                const uploadContainer = document.getElementById('quick-receipt-upload-container');
+                if (radio.value === 'TIEN_MAT') {
+                    uploadContainer.classList.add('opacity-40');
+                    uploadContainer.querySelector('input').disabled = true;
+                    clearQuickReceipt();
+                } else {
+                    uploadContainer.classList.remove('opacity-40');
+                    uploadContainer.querySelector('input').disabled = false;
+                }
+            }
+        }
+
+        function handleQuickTxSubmit(e) {
+            e.preventDefault();
+            const txType = document.querySelector('input[name="tx_type"]:checked').value;
+            const amount = parseInt(document.getElementById('tx_amount').value);
+            const category = document.getElementById('tx_category').value;
+            const method = document.querySelector('input[name="tx_payment_method"]:checked').value;
+            const desc = document.getElementById('tx_description').value.trim() || `Giao dịch thủ công`;
+            const customTime = document.getElementById('tx_time').value;
+
+            // Formulate date
+            const finalTime = customTime ? new Date(customTime).toISOString() : new Date().toISOString();
+            const finalImg = method === 'CHUYEN_KHOAN' ? tempQuickReceiptBase64 : "";
+
+            if (isNaN(amount) || amount <= 0) {
+                showToast("Số tiền không hợp lệ!", false);
+                return;
+            }
+
+            const newTx = {
+                id: `TX-${Math.floor(100000 + Math.random() * 900000)}`,
+                time: finalTime,
+                type: txType,
+                amount: amount,
+                category: category,
+                desc: desc,
+                paymentMethod: method,
+                receiptImg: finalImg
+            };
+
+            transactions.unshift(newTx);
+            saveToLocalStorage();
+
+            document.getElementById('tx_amount').value = '';
+            document.getElementById('tx_description').value = '';
+            clearQuickReceipt();
+
+            showToast(currentLanguage==='vi'?"Ghi nhận sổ quỹ thành công!":"ບັນທຶກລາຍຮັບ-ລາຍຈ່າຍສຳເລັດ!");
+            calculateDashboardKPIs();
+            renderTransactions();
+        }
+
+        function renderTransactions() {
+            const filterType = document.getElementById('tx-filter-type').value;
+            const filterMethod = document.getElementById('tx-filter-method').value;
+            const tbody = document.getElementById('tx-table-body');
+            tbody.innerHTML = '';
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+            let transferSum = 0;
+            let cashSum = 0;
+
+            const filteredTx = transactions.filter(t => {
+                if (t.type === 'THU') {
+                    totalIncome += t.amount;
+                    if (t.paymentMethod === 'CHUYEN_KHOAN') transferSum += t.amount;
+                    else cashSum += t.amount;
+                } else {
+                    totalExpense += t.amount;
+                    if (t.paymentMethod === 'CHUYEN_KHOAN') transferSum -= t.amount;
+                    else cashSum -= t.amount;
+                }
+
+                const matchesType = (filterType === 'ALL' || t.type === filterType);
+                const matchesMethod = (filterMethod === 'ALL' || t.paymentMethod === filterMethod);
+                return matchesType && matchesMethod;
+            });
+
+            document.getElementById('tx-total-income').innerText = formatCurrency(totalIncome);
+            document.getElementById('tx-total-expense').innerText = formatCurrency(totalExpense);
+            document.getElementById('tx-transfer-balance').innerText = formatCurrency(transferSum);
+            document.getElementById('tx-cash-balance').innerText = formatCurrency(cashSum);
+            document.getElementById('tx-balance').innerText = formatCurrency(totalIncome - totalExpense);
+
+            filteredTx.forEach(t => {
+                const dateFormatted = new Date(t.time).toLocaleString('vi-VN', {
+                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
+
+                let statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] font-bold"><i class="fa-solid fa-circle-arrow-down mr-1"></i> ${getTranslation('tx_income').toUpperCase()}</span>`;
+                let amountClass = "text-emerald-700 font-extrabold";
+
+                if (t.type === 'CHI') {
+                    statusBadge = `<span class="bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-[10px] font-bold"><i class="fa-solid fa-circle-arrow-up mr-1"></i> ${getTranslation('tx_expense').toUpperCase()}</span>`;
+                    amountClass = "text-rose-700 font-extrabold";
+                }
+
+                let methodBadge = `<span class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded flex items-center gap-1 w-max"><i class="fa-solid fa-credit-card"></i> ${getTranslation('pay_transfer')}</span>`;
+                if (t.paymentMethod === 'TIEN_MAT') {
+                    methodBadge = `<span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded flex items-center gap-1 w-max"><i class="fa-solid fa-money-bill-wave"></i> ${getTranslation('pay_cash')}</span>`;
+                }
+
+                let receiptCell = `<span class="text-slate-400 italic text-xs">No img</span>`;
+                if (t.receiptImg) {
+                    receiptCell = `
+                        <button onclick="openLightbox('${t.id}')" class="group relative block mx-auto border border-slate-200 rounded-lg overflow-hidden h-9 w-9 hover:border-emerald-500 transition shadow-sm">
+                            <img src="${t.receiptImg}" class="h-full w-full object-cover">
+                            <div class="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-[10px]">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+                        </button>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-mono font-bold text-xs text-slate-500">${t.id}</td>
+                    <td class="px-4 py-4 text-xs font-semibold text-slate-500">${dateFormatted}</td>
+                    <td class="px-4 py-4">${statusBadge}</td>
+                    <td class="px-4 py-4">${methodBadge}</td>
+                    <td class="px-4 py-4 text-xs text-slate-700 font-semibold">${t.category}</td>
+                    <td class="px-4 py-4 text-xs text-slate-600 max-w-xs truncate" title="${t.desc}">${t.desc}</td>
+                    <td class="px-4 py-4 text-center">${receiptCell}</td>
+                    <td class="px-4 py-4 text-right font-black ${amountClass}">${t.type === 'CHI' ? '-' : ''}${formatCurrency(t.amount)}</td>
+                    <td class="px-4 py-4 text-center">
+                        <button onclick="openEditTransactionModal('${t.id}')" class="text-slate-400 hover:text-emerald-600 transition" title="Sửa chi tiết phiếu này"><i class="fa-solid fa-pen-to-square"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openEditTransactionModal(txId) {
+            const t = transactions.find(item => item.id === txId);
+            if (!t) return;
+
+            document.getElementById('edit-tx-id').value = t.id;
+            document.getElementById('edit-tx-type').value = t.type;
+            document.getElementById('edit-tx-method').value = t.paymentMethod;
+            document.getElementById('edit-tx-amount').value = t.amount;
+            document.getElementById('edit-tx-category').value = t.category;
+            document.getElementById('edit-tx-desc').value = t.desc;
+
+            // Load edit time
+            const storedTime = new Date(t.time);
+            storedTime.setMinutes(storedTime.getMinutes() - storedTime.getTimezoneOffset());
+            document.getElementById('edit-tx-time').value = storedTime.toISOString().slice(0, 16);
+            
+            tempEditTxReceiptBase64 = t.receiptImg || "";
+            const preview = document.getElementById('edit-tx-receipt-preview');
+            if (t.receiptImg) {
+                preview.classList.remove('hidden');
+                preview.querySelector('img').src = t.receiptImg;
+                document.getElementById('edit-tx-upload-text').innerText = "Thay đổi ảnh...";
+            } else {
+                preview.classList.add('hidden');
+                preview.querySelector('img').src = "";
+                document.getElementById('edit-tx-upload-text').innerText = getTranslation('btn_choose_img');
+            }
+
+            document.getElementById('edit-transaction-modal').classList.remove('hidden');
+        }
+
+        function closeEditTransactionModal() {
+            document.getElementById('edit-transaction-modal').classList.add('hidden');
+            tempEditTxReceiptBase64 = "";
+            document.getElementById('edit_tx_receipt_file').value = "";
+        }
+
+        function handleEditTxReceiptSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempEditTxReceiptBase64 = e.target.result;
+                    document.getElementById('edit-tx-receipt-preview').classList.remove('hidden');
+                    document.getElementById('edit-tx-receipt-preview').querySelector('img').src = e.target.result;
+                    document.getElementById('edit-tx-upload-text').innerText = input.files[0].name;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearEditTxReceipt() {
+            tempEditTxReceiptBase64 = "";
+            document.getElementById('edit_tx_receipt_file').value = "";
+            document.getElementById('edit-tx-receipt-preview').classList.add('hidden');
+            document.getElementById('edit-tx-receipt-preview').querySelector('img').src = "";
+            document.getElementById('edit-tx-upload-text').innerText = getTranslation('btn_choose_img');
+        }
+
+        function handleEditTransactionSubmit(e) {
+            e.preventDefault();
+            const txId = document.getElementById('edit-tx-id').value;
+            const t = transactions.find(item => item.id === txId);
+            if (!t) return;
+
+            const amount = parseInt(document.getElementById('edit-tx-amount').value);
+            const customTime = document.getElementById('edit-tx-time').value;
+
+            if (isNaN(amount) || amount <= 0) {
+                showToast("Số tiền không hợp lệ!", false);
+                return;
+            }
+
+            t.type = document.getElementById('edit-tx-type').value;
+            t.paymentMethod = document.getElementById('edit-tx-method').value;
+            t.amount = amount;
+            t.category = document.getElementById('edit-tx-category').value;
+            t.desc = document.getElementById('edit-tx-desc').value.trim();
+            t.receiptImg = tempEditTxReceiptBase64;
+            t.time = customTime ? new Date(customTime).toISOString() : new Date().toISOString();
+
+            saveToLocalStorage();
+            closeEditTransactionModal();
+            showToast(currentLanguage === 'vi' ? `Đã lưu cập nhật giao dịch "${txId}"!` : "ແກ້ໄຂສຳເລັດ!");
+            renderTransactions();
+            calculateDashboardKPIs();
+        }
+
+        function deleteTransaction() {
+            const txId = document.getElementById('edit-tx-id').value;
+            if (txId) {
+                transactions = transactions.filter(t => t.id !== txId);
+                saveToLocalStorage();
+                closeEditTransactionModal();
+                showToast(getTranslation('msg_deleted'));
+                renderTransactions();
+                calculateDashboardKPIs();
+            }
+        }
+
+        // --- RECEIPT LIGHTBOX ---
+        function openLightbox(txId) {
+            const t = transactions.find(item => item.id === txId);
+            if (t && t.receiptImg) {
+                document.getElementById('lightbox-image').src = t.receiptImg;
+                document.getElementById('lightbox-title').innerText = `Biên lai GD: ${t.id} - ${formatCurrency(t.amount)}`;
+                document.getElementById('lightbox').classList.remove('hidden');
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+        }
+
+
+        // --- REPORT & GRAPH (No dummy initial data) ---
+        function initRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const labels = ['28/05', '29/05', '30/05', '31/05', '01/06', '02/06', 'Hôm nay'];
+            
+            // Empty base array
+            const data = [0, 0, 0, 0, 0, 0, 0];
+
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VND)',
+                        data: data,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#047857'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateReportsAndCharts() {
+            const container = document.getElementById('room-occupancy-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Calculate live utilization for the single Private Room
+            let occupancy = 0;
+            if (transactions.length > 0) {
+                // If there's transactions we simulate real occupancy based on active booking counts
+                occupancy = Math.min(100, Math.round((bookings.length * 20) + 10));
+            }
+
+            const barColor = occupancy > 70 ? 'bg-emerald-500' : (occupancy > 30 ? 'bg-amber-500' : 'bg-slate-400');
+
+            const item = document.createElement('div');
+            item.className = "space-y-1.5";
+            item.innerHTML = `
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-700">${roomPrivate.name}</span>
+                    <span class="font-semibold text-slate-500">${getTranslation('nav_reports')}: ${occupancy}%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="h-2 rounded-full ${barColor}" style="width: ${occupancy}%"></div>
+                </div>
+            `;
+            container.appendChild(item);
+
+            if (revenueChart) {
+                const today = new Date().toISOString().split('T')[0];
+                let todayTotal = 0;
+                transactions.forEach(t => {
+                    if (t.type === 'THU' && t.time.startsWith(today)) todayTotal += t.amount;
+                });
+
+                revenueChart.data.datasets[0].data[6] = todayTotal;
+                revenueChart.update();
+            }
+        }
+
+        function renderServiceLeaderboards() {
+            const container = document.getElementById('service-leaderboard');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const leaders = [
+                { name: "Nước ngọt Coca-Cola", sales: 12, icon: "fa-wine-bottle", color: "text-rose-500" },
+                { name: "Bia Heineken", sales: 8, icon: "fa-beer-mug-empty", color: "text-emerald-500" },
+                { name: "Thuê gậy TaylorMade", sales: 5, icon: "fa-golf-ball-tee", color: "text-sky-500" }
+            ];
+
+            leaders.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-50 border border-slate-100 p-2 rounded-lg";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded bg-white border border-slate-200 flex items-center justify-center ${item.color} text-xs">
+                            <i class="fa-solid ${item.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-800">${item.name}</p>
+                        </div>
+                    </div>
+                    <span class="text-[9px] bg-slate-200 px-1.5 py-0.5 rounded font-bold text-slate-600">Top</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
